@@ -1,0 +1,29 @@
+# WCS Workflow Concepts
+
+A workflow is configured graph structure; work/tasks are runtime instances.
+
+- Graph nodes include tasks, resources, requests, orders, assets, properties, rules, priorities and relations.
+- Work requests are requested execution.
+- Task requests can fan out into activity tasks.
+- Resource tasks bind work to worker/equipment/resource.
+- Task groups coordinate or refresh related tasks.
+- Orchestrators model position/resource availability and queuing.
+
+```mermaid
+flowchart LR
+  graph[Workflow graph] --> wr[Work request]
+  wr --> tr[Task request]
+  tr --> at[Activity task]
+  at --> rt[Resource task]
+  rt --> exec[Execution/events]
+```
+
+Generic lifecycle vocabulary includes created, ready, started, paused, executed, completed, cancelled, reset and error. Activity/aggregate rules determine valid transitions.
+
+`WorkDispatcher` creates/fans out work and tasks. `TaskDispatcher` assigns eligible next tasks and periodically activates overdue work/refreshes priorities. Activities specialize execution for receiving, picking, move, production, consolidation, G2P, shipping, count, APM and returns.
+
+CSV examples include receiving, picking, inbound orders/shipments, stock count, putwall consolidation, ASRS G2P and production workflows.
+
+Related: [[WCS Axon Aggregates]], [[WCS Runtime Flows]], [[WCS Agent Applications StatefulApplication]].
+
+Source: `tes-engine/src/main/java/com/onomatic/tes/engine/core/workflow/`; `tes-engine/src/main/java/com/onomatic/tes/engine/core/dispatcher/`; `tes-engine/src/main/java/com/onomatic/tes/engine/core/model/`; `tes-config/src/main/java/com/onomatic/tes/config/workflow/`; `resources/config/onomatic/data/workflow/`.

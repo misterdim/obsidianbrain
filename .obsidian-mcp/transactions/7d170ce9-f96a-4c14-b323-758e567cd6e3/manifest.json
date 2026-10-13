@@ -1,0 +1,53 @@
+{
+  "id": "7d170ce9-f96a-4c14-b323-758e567cd6e3",
+  "state": "rolled_back",
+  "createdAt": "2026-09-22T12:55:48.302Z",
+  "snapshots": [
+    {
+      "path": "Projects/TES/TES Sagas Projections.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "pending",
+      "plannedEtag": "5b13aa2d4c53d0f5c59755874150ce4cd896605035e9e1c0d2369c9be1ee055b",
+      "recoverable": true,
+      "existed": false,
+      "committedEtag": "5b13aa2d4c53d0f5c59755874150ce4cd896605035e9e1c0d2369c9be1ee055b"
+    },
+    {
+      "path": "Projects/WCS/WCS Sagas Projections.md",
+      "operation": "delete",
+      "entryType": "file",
+      "phase": "pending",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "5b13aa2d4c53d0f5c59755874150ce4cd896605035e9e1c0d2369c9be1ee055b",
+      "snapshot": "1.bin"
+    },
+    {
+      "path": "Projects/TES/TES Index.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "applying",
+      "plannedEtag": "69ef86c16ba169482db452fc3d1bcb7542b9e1d51cf9abb0ddd33d0ad3ba6427",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "8a67bb4716de3d127b2511ba42820c1122e58e2cf347ca1bf2aa9af80ecb1d2c",
+      "snapshot": "2.bin"
+    },
+    {
+      "path": "Projects/TES/TES PostgreSQL Persistence.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "pending",
+      "plannedEtag": "0458818499916bd94050d1f60c090b815b6aa27c7a47c0c5249efa72990aaae0",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "425133ad569a5b4a3276eb3ed7150bf18c1039e6de8c091dd824fbaea54448a8",
+      "snapshot": "3.bin"
+    }
+  ],
+  "completedAt": "2026-09-22T12:55:48.340Z"
+}

@@ -1,0 +1,21 @@
+{
+  "id": "6e23574d-fb85-4842-9f76-0c157fd5e462",
+  "state": "committed",
+  "createdAt": "2026-09-22T17:58:50.631Z",
+  "snapshots": [
+    {
+      "path": "Projects/TES/TES Sagas Projections.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "applied",
+      "plannedEtag": "64e133c973c007acceb5c4a9b2d2242de50f3ee3ee859782bc3b031e07fba8a6",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "f21c69a77fd0d33417249766ad2339c6d6f6e14f667593bf0948e5a00fb0e4eb",
+      "snapshot": "0.bin",
+      "committedEtag": "64e133c973c007acceb5c4a9b2d2242de50f3ee3ee859782bc3b031e07fba8a6"
+    }
+  ],
+  "completedAt": "2026-09-22T17:58:50.647Z"
+}

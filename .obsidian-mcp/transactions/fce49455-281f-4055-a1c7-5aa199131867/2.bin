@@ -1,0 +1,25 @@
+# WCS Configuration
+
+Configuration is layered across root/profile YAML, environment variables, runtime config aggregates and CSV bootstrap data.
+
+```mermaid
+flowchart TB
+  root[application.yaml] --> profile[Profile overlays]
+  profile --> env[Environment]
+  csv[resources/config CSV] --> bootstrap[Import/bootstrap]
+  api[Config APIs] --> agg[Config aggregates]
+  agg --> runtime[Runtime services]
+  env --> runtime
+```
+
+Root defaults include port 8080, app name `tes-app`, API `/api`, UI `/spa`, tenant header `X-Tenant-Id`, WebSocket `/ws`, STOMP prefixes, device outbound `/device/outbound`, and disabled-by-default Axon Server/distributed/Consul/GCP integrations.
+
+Configuration aggregates cover sites, systems, users, applications/sessions, workflows, workers/pools, zones, equipment/pools, resources, connectors, devices, agents, integrations, webhooks, item/container/order/job types and security metadata.
+
+CSV resources contain workflow, customer/site, equipment, worker, layout, item, inventory and connector data. They are bootstrap/configuration data, separate from event state.
+
+Authentication is intentionally profile-specific; do not infer credentials from root config.
+
+Related: [[TES Bounded Contexts]], [[WCS Deployment Architecture]], [[TES Workflow Concepts]].
+
+Source: `tes-app/src/main/resources/application.yaml`; `tes-app/src/main/resources/application-*.yaml`; `tes-config/src/main/java/com/onomatic/tes/config/`; `tes-agent/src/main/resources/`; `resources/config/`.

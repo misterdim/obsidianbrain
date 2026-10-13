@@ -1,0 +1,21 @@
+{
+  "id": "d5527b37-aa9d-4304-a93d-723c7bd04819",
+  "state": "committed",
+  "createdAt": "2026-09-22T17:58:49.515Z",
+  "snapshots": [
+    {
+      "path": "Projects/TES/Applications/Yourbar Receiving Application.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "applied",
+      "plannedEtag": "f9c9623825d572e6839d9921b1d5b2b5c8cf7ad1bdb3f8f165a74fbc06f96e20",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "84df649b616e004e801e40da10875ab24b30eccde06c650deeb49be691236ab4",
+      "snapshot": "0.bin",
+      "committedEtag": "f9c9623825d572e6839d9921b1d5b2b5c8cf7ad1bdb3f8f165a74fbc06f96e20"
+    }
+  ],
+  "completedAt": "2026-09-22T17:58:49.531Z"
+}

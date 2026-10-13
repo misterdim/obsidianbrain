@@ -1,0 +1,9 @@
+# Updates
+
+- 2026-10-13T15:41:22-04:00 — `Integration Notes.md`: recorded that IntelliJ MCP project identity is the root module `tes`, obtained via `get_project_modules`, so project memory belongs in `Projects/tes/` rather than the Codex workspace-name folder.
+
+- 2026-10-13T15:14:01-04:00 — `AHS Agent Authentication Flow.md`: recorded the verified browser → Agent → AHS authentication and session flow, plus local runtime observations.
+- 2026-10-13T15:14:01-04:00 — `Files.md`: added the requested manual path entry for `ApplicationLoginPage.vue`.
+- 2026-10-13T15:44:15-04:00 — `AHS Agent Authentication Flow.md` and `Files.md`: moved project memory from `Projects/task-execution-system/` to `Projects/tes/` and consolidated its historical log entries.
+- 2026-10-13T15:45:05-04:00 — `Integration Notes.md`: recorded that the memory skill now resolves this project through the IntelliJ root module before falling back to the workspace folder.
+- 2026-10-13T16:25:13-04:00 — `Integration Notes.md`: adopted the shared project wiki schema for incremental use by future project-memory updates.

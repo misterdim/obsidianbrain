@@ -1,0 +1,53 @@
+{
+  "id": "940fa7be-13c1-466f-b797-bd79bb4b45d9",
+  "state": "rolled_back",
+  "createdAt": "2026-09-22T12:55:58.652Z",
+  "snapshots": [
+    {
+      "path": "Projects/TES/TES Commands Events Handlers.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "pending",
+      "plannedEtag": "d916f0a2a29de06d8b57df3d927d5e5c67680c75934f53db33adee33e350237f",
+      "recoverable": true,
+      "existed": false,
+      "committedEtag": "d916f0a2a29de06d8b57df3d927d5e5c67680c75934f53db33adee33e350237f"
+    },
+    {
+      "path": "Projects/WCS/WCS Commands Events Handlers.md",
+      "operation": "delete",
+      "entryType": "file",
+      "phase": "pending",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "d916f0a2a29de06d8b57df3d927d5e5c67680c75934f53db33adee33e350237f",
+      "snapshot": "1.bin"
+    },
+    {
+      "path": "Projects/TES/TES Index.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "pending",
+      "plannedEtag": "4bcdd59446ed6b9559f7812dddf5e98fe4b6b5f1337385ff8dacc62a8e60f09b",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "20d213a9e37b6ccff7e1286ee08a0d1d4d6f2bfa237ded032f1039fa0a8adc60",
+      "snapshot": "2.bin"
+    },
+    {
+      "path": "Projects/WCS/WCS Axon Aggregates.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "pending",
+      "plannedEtag": "be382c50b7a3b42e2bc48e33d403dad3ede6fbb216b582289a14ddffb07ec933",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "13995b14e6579a391b19d84b603e086ebca04a1f9c84e2f6b223fe4b7bad3e30",
+      "snapshot": "3.bin"
+    }
+  ],
+  "completedAt": "2026-09-22T12:55:58.688Z"
+}

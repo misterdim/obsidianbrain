@@ -1,0 +1,37 @@
+# WCS Runtime Flows
+
+## Work execution
+
+```mermaid
+sequenceDiagram
+  participant H as Host/API
+  participant D as WorkDispatcher
+  participant A as Work/Task aggregate
+  participant P as Projector
+  participant T as TaskDispatcher
+  participant G as Agent gateway
+  participant U as Agent application
+  H->>D: request work creation
+  D->>A: create/activate work
+  A-->>P: lifecycle event
+  A-->>T: task-ready event
+  T->>G: assign/dispatch task
+  G->>U: task/message
+  U->>G: operator/device action
+  G->>A: task command
+  A-->>P: status event
+```
+
+## Agent session
+
+The agent builds configured applications, creates a session, consumes initialization/task/input/equipment/item events, computes display/actions, and routes commands back to TES. Stateful applications update session state after each event.
+
+## Host integration
+
+Importers translate external order/job/work input into core requests. Exporters map selected events to host messages/webhooks. Event monitors run asynchronously.
+
+## Query path
+
+Axon query handlers read projection repositories/caches. They are read models and can lag the event stream when tracking processors are asynchronous.
+
+Source: `tes-engine/src/main/java/com/onomatic/tes/engine/core/dispatcher/WorkDispatcher.java`; `tes-engine/src/main/java/com/onomatic/tes/engine/core/dispatcher/TaskDispatcher.java`; `tes-engine/src/main/java/com/onomatic/tes/engine/work/`; `tes-host-importer/src/main/java/com/onomatic/tes/host/importer/`; `tes-host-exporter/src/main/java/com/onomatic/tes/host/exporter/`; `tes-agent/src/main/java/com/onomatic/tes/agent/application/`.

@@ -1,0 +1,91 @@
+{
+  "id": "70939f00-d14a-4bec-aaa8-e4a1d49ddf84",
+  "state": "rolled_back",
+  "createdAt": "2026-09-22T12:55:48.170Z",
+  "snapshots": [
+    {
+      "path": "Projects/TES/TES Runtime Flows.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "pending",
+      "plannedEtag": "ebe14b16550887d39ac67042812f97afbea416bed3a02fddeb08802644a39c90",
+      "recoverable": true,
+      "existed": false,
+      "committedEtag": "ebe14b16550887d39ac67042812f97afbea416bed3a02fddeb08802644a39c90"
+    },
+    {
+      "path": "Projects/WCS/WCS Runtime Flows.md",
+      "operation": "delete",
+      "entryType": "file",
+      "phase": "pending",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "ebe14b16550887d39ac67042812f97afbea416bed3a02fddeb08802644a39c90",
+      "snapshot": "1.bin"
+    },
+    {
+      "path": "Projects/TES/TES Agent Applications StatefulApplication.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "pending",
+      "plannedEtag": "335e6da8641011f10a0bd1aa33f30e7084d598cf7cd4b2946f39499690b7fea0",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "760335b907a4f15252057fd77952fa227125b052c1a3f4b27cecd1be3091b672",
+      "snapshot": "2.bin",
+      "committedEtag": "335e6da8641011f10a0bd1aa33f30e7084d598cf7cd4b2946f39499690b7fea0"
+    },
+    {
+      "path": "Projects/TES/TES Architecture.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "pending",
+      "plannedEtag": "de0a830df1644a51720a7a0d5ef4b3f8dc4af449ee5b1c3baba1b6e267ce8067",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "c94825c8ce3e3aa5a9cbe6fe8f5ae534438f3d8f182a364d9477ef1ab5f797cb",
+      "snapshot": "3.bin",
+      "committedEtag": "de0a830df1644a51720a7a0d5ef4b3f8dc4af449ee5b1c3baba1b6e267ce8067"
+    },
+    {
+      "path": "Projects/TES/TES Index.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "applying",
+      "plannedEtag": "af7b1e696ed566dfaba011ff1a06e4605a137754783fd1afac084e56c034e071",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "8a67bb4716de3d127b2511ba42820c1122e58e2cf347ca1bf2aa9af80ecb1d2c",
+      "snapshot": "4.bin"
+    },
+    {
+      "path": "Projects/WCS/WCS Commands Events Handlers.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "pending",
+      "plannedEtag": "14f965ccd429dc2ee5a930e12ed04cb68ae7f41b3564dcc9874b71910f88863a",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "3ba23f4fd548016acc53064bd7b636d64901e0bb31630dce724667a5d3bbc14f",
+      "snapshot": "5.bin"
+    },
+    {
+      "path": "Projects/WCS/WCS Workflow Concepts.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "pending",
+      "plannedEtag": "bac68a4d85ab6e243dd493c04826a1f61cdca335143f7adb7eee8ffb674f045a",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "9d5e17d37eb7b2cc502b839561f64f4424bbfca0acd7f681884fe8419f28727a",
+      "snapshot": "6.bin"
+    }
+  ],
+  "completedAt": "2026-09-22T12:55:48.239Z"
+}

@@ -1,0 +1,43 @@
+---
+title: TES Bounded Contexts
+project: TES
+document_type: technical-wiki
+area: architecture
+tags: [tes, technical-wiki, architecture]
+updated: 2026-09-22
+---
+
+# TES Bounded Contexts
+
+| Context | Responsibility | Modules |
+|---|---|---|
+| Core contracts | IDs, commands, events, DTOs, enums | `tes-coreapi` |
+| Configuration | Sites, workflows, applications, sessions, workers, equipment, connectors | `tes-config` |
+| Execution | Work, task requests, activity tasks, dispatching, orchestration | `tes-engine` |
+| Inventory | Items, containers, locations, assets, equipment state and movement | `tes-inventory` |
+| Activities | Picking, receiving, move, production, consolidation, G2P, shipping, count | `tes-activity` |
+| Host integration | Import/export, event mapping, webhooks | `tes-host-importer`, `tes-host-exporter` |
+| Broker | Agent message log, dispatch and queries | `tes-message-broker` |
+| Agent | Connectors, drivers, sessions and operator applications | `tes-agent` |
+| UI API | UI DTO mapping and REST facade | `tes-webui-api` |
+| Support | Simulation and shared fixtures | `tes-simulator`, `tes-test` |
+
+```mermaid
+flowchart TB
+  core[Core contracts] --> config[Configuration]
+  core --> execution[Execution]
+  core --> inventory[Inventory]
+  config --> execution
+  inventory --> execution
+  activity[Activities] --> execution
+  integration[Host integration] --> execution
+  execution --> broker[Broker]
+  broker --> agent[Agent]
+  ui[UI API] --> config
+  ui --> inventory
+  ui --> execution
+```
+
+The boundary is package/module ownership, not independent deployment: most contexts are assembled into `tes-app`.
+
+Source: `settings.gradle`; `tes-config/src/main/java/com/onomatic/tes/config/`; `tes-engine/src/main/java/com/onomatic/tes/engine/`; `tes-inventory/src/main/java/com/onomatic/tes/inventory/`; `tes-activity/src/main/java/com/onomatic/tes/activity/`.

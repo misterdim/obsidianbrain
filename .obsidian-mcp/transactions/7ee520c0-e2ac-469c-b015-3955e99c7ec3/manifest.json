@@ -1,0 +1,77 @@
+{
+  "id": "7ee520c0-e2ac-469c-b015-3955e99c7ec3",
+  "state": "rolled_back",
+  "createdAt": "2026-09-22T12:55:47.439Z",
+  "snapshots": [
+    {
+      "path": "Projects/TES/TES Axon Aggregates.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "pending",
+      "plannedEtag": "8e77a298c311fe67dc05f514861ec8a4177d61e9aa638d2f0adc782a543d4eca",
+      "recoverable": true,
+      "existed": false,
+      "committedEtag": "8e77a298c311fe67dc05f514861ec8a4177d61e9aa638d2f0adc782a543d4eca"
+    },
+    {
+      "path": "Projects/WCS/WCS Axon Aggregates.md",
+      "operation": "delete",
+      "entryType": "file",
+      "phase": "pending",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "8e77a298c311fe67dc05f514861ec8a4177d61e9aa638d2f0adc782a543d4eca",
+      "snapshot": "1.bin"
+    },
+    {
+      "path": "Projects/WCS/WCS Commands Events Handlers.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "applying",
+      "plannedEtag": "b195744a4ef501837ba4dd312fda6d5e426b0d4ad54f12f6d0f0d90ac55edfe0",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "3ba23f4fd548016acc53064bd7b636d64901e0bb31630dce724667a5d3bbc14f",
+      "snapshot": "2.bin"
+    },
+    {
+      "path": "Projects/WCS/WCS Index.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "pending",
+      "plannedEtag": "ab92c75f3a58236f1b1c6be701e6b9967bbe429ffdec155db2be0f01639fbe75",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "760f70cdf934392ee7dde89d1c30d06a6a4a5fd0a313bb4cfb4a8485b9733748",
+      "snapshot": "3.bin"
+    },
+    {
+      "path": "Projects/WCS/WCS PostgreSQL Persistence.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "pending",
+      "plannedEtag": "c51eb6a26f15461ec7665e44188184331f1a56d7f2bfd8d99ae607a4a840f9f5",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "425133ad569a5b4a3276eb3ed7150bf18c1039e6de8c091dd824fbaea54448a8",
+      "snapshot": "4.bin"
+    },
+    {
+      "path": "Projects/WCS/WCS Workflow Concepts.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "pending",
+      "plannedEtag": "ef8774e92e41cc0d1ccfcb974049f2b4de215d0db8f16a54f8a529dfe41bdbc0",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "9d5e17d37eb7b2cc502b839561f64f4424bbfca0acd7f681884fe8419f28727a",
+      "snapshot": "5.bin"
+    }
+  ],
+  "completedAt": "2026-09-22T12:55:47.472Z"
+}

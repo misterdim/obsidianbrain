@@ -1,0 +1,24 @@
+{
+  "id": "3559be62-1f28-4c3b-ad56-118ed11fe992",
+  "state": "committed",
+  "createdAt": "2026-09-21T20:30:37.884Z",
+  "snapshots": [
+    {
+      "path": "Projects",
+      "operation": "mkdir",
+      "entryType": "directory",
+      "phase": "applied",
+      "recoverable": true,
+      "existed": false
+    },
+    {
+      "path": "Projects/WCS",
+      "operation": "mkdir",
+      "entryType": "directory",
+      "phase": "applied",
+      "recoverable": true,
+      "existed": false
+    }
+  ],
+  "completedAt": "2026-09-21T20:30:37.909Z"
+}

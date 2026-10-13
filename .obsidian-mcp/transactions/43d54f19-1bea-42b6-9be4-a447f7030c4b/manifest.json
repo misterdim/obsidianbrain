@@ -1,0 +1,39 @@
+{
+  "id": "43d54f19-1bea-42b6-9be4-a447f7030c4b",
+  "state": "committed",
+  "createdAt": "2026-10-13T19:44:36.606Z",
+  "snapshots": [
+    {
+      "path": ".obsidian-mcp/trash/5c0322bb-5ea4-4275-923c-75af9f3166e7.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "applied",
+      "plannedEtag": "7628331080153e8c73ee306a9aa3518bdf02776a33a28963149eee4d5009ed83",
+      "recoverable": true,
+      "existed": false,
+      "committedEtag": "7628331080153e8c73ee306a9aa3518bdf02776a33a28963149eee4d5009ed83"
+    },
+    {
+      "path": ".obsidian-mcp/trash/5c0322bb-5ea4-4275-923c-75af9f3166e7.json",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "applied",
+      "plannedEtag": "552829c71e8f85a56da1c32d0f0688470725f0b7410f51bb88c1bb2f35b6896c",
+      "recoverable": true,
+      "existed": false,
+      "committedEtag": "552829c71e8f85a56da1c32d0f0688470725f0b7410f51bb88c1bb2f35b6896c"
+    },
+    {
+      "path": "Projects/task-execution-system/Updates.md",
+      "operation": "delete",
+      "entryType": "file",
+      "phase": "applied",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "7628331080153e8c73ee306a9aa3518bdf02776a33a28963149eee4d5009ed83",
+      "snapshot": "2.bin"
+    }
+  ],
+  "completedAt": "2026-10-13T19:44:36.638Z"
+}

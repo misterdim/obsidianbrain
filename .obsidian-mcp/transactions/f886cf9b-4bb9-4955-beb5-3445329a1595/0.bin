@@ -1,0 +1,90 @@
+# TES Repository Map
+
+## Purpose
+
+This page is the source-oriented map for the TES repository. It complements [[TES Spring Boot Modules]] with the current Gradle module list and the non-module roots that affect runtime, configuration, deployment, and documentation.
+
+Authoritative build sources:
+
+- `settings.gradle`
+- `build.gradle`
+- `gradle/`
+- `gradle.properties`
+
+## Gradle modules
+
+| Module | Role evidenced by source/build |
+|---|---|
+| `tes-coreapi` | Shared Java/Kotlin contracts: commands, events, IDs, task/work models, workflow definitions, application types, DTOs, integration contracts |
+| `tes-common` | Shared view/query models and common utilities |
+| `tes-config` | Configuration loading and config-domain support |
+| `tes-host-importer` | Host/inbound integration |
+| `tes-host-exporter` | Host/outbound integration |
+| `tes-message-broker` | RabbitMQ/message-broker integration |
+| `tes-engine` | Axon aggregates, command/event orchestration, workflow engine, task dispatch, projections/query context, persistence-facing domain services |
+| `tes-app` | Published TES application/server container |
+| `tes-agent` | Local agent container: REST/websocket application controllers, equipment/resource adapters, manufacturer integrations |
+| `tes-test` | Cross-module tests and test support |
+| `tes-webui-api` | Web UI/API-facing contracts and endpoints |
+| `tes-inventory` | Inventory-specific domain/query functionality |
+| `tes-activity` | Activity implementations: picking, putaway, count, receiving, shipping, move, G2P, production, and application state machines |
+| `tes-simulator` | Simulation runtime and simulated device/application behavior |
+
+The included modules are declared in `settings.gradle`. The two published container projects are `tes-app` and `tes-agent`; `tes-coreapi` is also published as a library according to `build.gradle`.
+
+## Runtime boundaries
+
+```mermaid
+flowchart TB
+    Core[tes-coreapi] --> Engine[tes-engine]
+    Core --> Activity[tes-activity]
+    Core --> Agent[tes-agent]
+    Engine --> App[tes-app]
+    Engine --> Agent
+    Activity --> Engine
+    Agent --> Broker[tes-message-broker]
+    Engine --> Broker
+    Import[tes-host-importer] --> Engine
+    Engine --> Export[tes-host-exporter]
+    UI[tes-webui-api] --> App
+    Sim[tes-simulator] -. simulated runtime .-> Agent
+```
+
+This is a dependency/runtime boundary diagram, not a complete Gradle dependency graph. Verify exact dependencies in each module's `build.gradle`.
+
+## Important source roots
+
+- Domain contracts: `tes-coreapi/src/main/java/com/onomatic/tes/coreapi/`
+- Shared query/view models: `tes-common/src/main/java/com/onomatic/tes/common/`
+- Workflow/activity implementations: `tes-activity/src/main/java/com/onomatic/tes/activity/`
+- Engine orchestration: `tes-engine/src/main/java/com/onomatic/tes/engine/`
+- Agent REST/websocket and equipment integrations: `tes-agent/src/main/java/com/onomatic/tes/agent/`
+- Configuration: `tes-config/src/main/java/com/onomatic/tes/config/` and `resources/config/`
+- Host integration: `tes-host-importer/src/main/java/`, `tes-host-exporter/src/main/java/`
+- Broker integration: `tes-message-broker/src/main/java/`
+- HTTP/API contract: `tes-webui-api/src/main/java/`, `api-docs.json`
+- Deployment/build support: `config/`, `.github/`, `Dockerfile*`, `build.gradle`
+
+## Application documentation
+
+- [[CPF North AutoStore]]
+- [[CPF North AutoStore Picking Flow]]
+- [[CPF North AutoStore Putaway Flow]]
+- [[Yourbar Count Application]]
+- [[Yourbar Count Application Flow]]
+- [[TES Agent Applications StatefulApplication]]
+
+## Build and packaging facts
+
+From `build.gradle`:
+
+- Java and Kotlin toolchains target Java 21.
+- Spring Boot, Spring AMQP, Axon, Spring Cloud Consul, Spring Web, JPA, Security, websocket, and actuator dependencies are applied broadly to subprojects.
+- `tes-app` and `tes-agent` produce published WAR/container artifacts.
+- Most non-container modules disable `bootJar`; `tes-coreapi` and other libraries publish Java components.
+- Boot build-image configuration is applied to the published container projects.
+- OpenAPI generation uses `api-docs.json` and writes to `tes-openapi-client`.
+
+## Scope boundary
+
+This map describes the repository topology and build declarations. For detailed runtime behavior, follow [[TES Architecture]], [[TES Bounded Contexts]], [[TES Runtime Flows]], [[TES RabbitMQ Topology]], and [[TES Deployment Architecture]].

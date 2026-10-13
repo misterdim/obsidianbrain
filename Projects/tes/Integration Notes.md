@@ -1,0 +1,11 @@
+# Integration Notes
+
+## Project identity
+
+For this IntelliJ workspace, obtain the project identity from `get_project_modules`. The root module is `tes`; entries beginning with `tes.` are submodules. Use `tes` for the Obsidian memory path (`Projects/tes/`).
+
+The IntelliJ MCP tool list does not expose a direct current-project-name command. Do not fall back to the Codex workspace folder (`task-execution-system`) before querying `get_project_modules` and selecting the root module.
+
+The `obsidian-project-memory` skill now calls `get_project_modules` and selects this root module before using the workspace-folder fallback.
+
+Project memory now follows the shared [[Projects/_Wiki Schema]] incrementally: new canonical notes use its types, evidence, links, and freshness conventions without reformatting legacy notes.

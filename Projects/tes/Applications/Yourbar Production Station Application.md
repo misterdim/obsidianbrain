@@ -1,0 +1,106 @@
+---
+title: Yourbar Production Station Application
+project: TES
+document_type: technical-wiki
+area: applications
+tags: [tes, technical-wiki, applications, yourbar]
+updated: 2026-09-22
+---
+
+# Yourbar Production Station Application
+
+Parent: [[Yourbar Chateauguay Workflow Applications]]  
+Related: [[TES Workflow Concepts]], [[TES Runtime Flows]], [[TES Agent Applications StatefulApplication]], [[Yourbar Forklift]]
+
+## Configuration usage
+
+The production workstation application is registered by workstation layout/configuration as `$SITE/station` with a move-request/workstation-workorder variant. It is used by active resources in:
+
+- `workflow/yourbar-production.csv`: production order workstation resources.
+- `workflow/production/yourbar-production-consume.csv`: consume ingredients.
+- `workflow/production/yourbar-production-move-to-wip.csv`: move work-order material to WIP.
+- `workflow/production/yourbar-production-picking.csv`: workstation-side pick/replenishment activities.
+- `workflow/production/yourbar-production-switch.csv`: switch work order at a workstation.
+- `workflow/production/yourbar-production-return.csv`: workstation return/putaway resources.
+
+The workstation inventory is defined in:
+
+`resources/config/customers/yourbar/chateauguay/layout/yourbar-pr-layout.csv`
+
+with `ProductionWorkstationDef` resources and workstation display devices.
+
+## Event flow
+
+```mermaid
+sequenceDiagram
+    participant Station as Production station UI
+    participant Engine as Workflow engine
+    participant WorkOrder as Production work order
+    participant Task as Activity/resource task
+    participant Forklift as Forklift app
+
+    Engine-->>Station: active work requests/tasks
+    Station->>Station: CREATE_REQUEST or EXECUTE_TASK
+    Station->>Engine: choose request/task type and scan work order/item
+    Station->>Engine: RequestWorkCreationCommand or task execution command
+    Engine-->>WorkOrder: WorkRequestCreated/Ready
+    Engine-->>Station: task/activity creation and assignment
+    Station->>Task: execute pick/consume/return/move-to-WIP
+    Task-->>Engine: resource execution/completion events
+    Engine-->>Station: work request started/completed/cancelled
+    Engine-->>Forklift: separate summon/pick/return/receiving task when configured
+    Forklift-->>Engine: physical move completion
+    Engine-->>WorkOrder: next workflow relation or completion
+```
+
+## Application implementation
+
+The factory path is:
+
+- `tes-agent/src/main/java/com/onomatic/tes/agent/application/production/workstation/wo/WorkstationWOProductionBuilder.java`
+- `tes-activity/src/main/java/com/onomatic/tes/activity/production/application/WorkstationWOProductionApplicationDef.java`
+- `tes-activity/src/main/java/com/onomatic/tes/activity/production/application/WorkstationWOProductionSessionDef.java`
+- `tes-activity/src/main/java/com/onomatic/tes/activity/production/application/state/WorkstationWOProductionAppState.java`
+
+The initial state displays active work requests for the workstation equipment. The operator can:
+
+- create a work request;
+- choose configured request type;
+- select a work order/item and enter quantity/properties;
+- execute a task type supported by the station’s workflow equipment;
+- inspect active requests and their source/target work orders.
+
+The state machine uses `CreateWorkRequestState`, `CreateTaskExecutionState`, `MoveToWipState`, `ProductionPickOrderRequestState`, `ProductionConsumeState`, `ProductionReturnState`, and `ProductionSummonRequestState`.
+
+## Production activities represented in CSV
+
+The production workflow defines nine production/order stations:
+
+`production-FLM`, `production-CUI`, `production-MIX`, `production-EMB`, `production-ERP`, `production-FGM`, `production-FG2`, `production-FG3`, and `production-ZN4`.
+
+The same work-order application is connected to:
+
+- `production/order`: production execution at the station;
+- `production/order/pick-order-item`: ingredient pick requests;
+- `replenishment/item/replenish`: common-item/hot-box replenishment;
+- `production/order/summon-equipment`: summon forklift requests;
+- `production/order/return-item`: returns from production;
+- `production/order/output-item`: production output receiving;
+- `movetowip/order`: move items/containers into WIP;
+- `production/order/switch`: switch a workstation’s work order;
+- `production/order/consume`: consume ingredients.
+
+## WIP flow
+
+`MoveToWipState`:
+
+1. Selects a work order with items at a configured production start position.
+2. Validates that the WIP position is not occupied by another work order.
+3. Selects all or selected source containers/items.
+4. On confirmation, creates a move-to-WIP work request using `RequestWorkCreationCommand`.
+5. Tracks pending move resource task IDs.
+6. Shows completion only after all pending resource tasks complete.
+
+## Configuration caveat
+
+There are two similarly named production application type packages in core API source (`application.type.request` and `application.type.production`) and two workstation builders. The factory path used for `MOVE_REQUEST` selects `WorkstationWOProductionApplicationDef` for the workstation variant. Treat the application variant/factory mapping as the authoritative runtime path and verify generated configuration if a deployment uses the other production builder.

@@ -1,0 +1,313 @@
+---
+title: ASRS Workstation Page
+application: ASRS
+area: ui
+source: tes-agent/src/ui/src/pages/asrs/AsrsWorkstationPage.vue
+---
+
+# ASRS Workstation Page
+
+This page renders the ASRS picking and putaway workstation UI. Its functional data path is:
+
+~~~text
+ApplicationSessionStore
+  -> RuntimeStore.fetch() and RuntimeStore.subscribe()
+  -> deviceState.displayState
+  -> displayState.displayData.widgets
+  -> AsrsWorkstationStore
+  -> page and child viewers
+~~~
+
+## Session and lifecycle requirements
+
+The page requires:
+
+- an authenticated application session;
+- a valid IApplicationProps.lookupId;
+- deviceId when the application must be initialized directly;
+- a successful GET state request;
+- an active websocket/STOMP subscription;
+- backend support for g2p/asrs/refresh-state.
+
+On mount it restores or initializes the session, subscribes to runtime updates, fetches state, and invokes g2p/asrs/refresh-state. A failed initial fetch redirects to login.
+
+## Runtime state required
+
+The page reads:
+
+~~~text
+deviceState.displayState.displayData.widgets
+deviceState.displayState.instruction
+deviceState.displayState.message
+~~~
+
+The display data must contain a widgets array. The ASRS store selects widgets by name and directly parses JSON widget data, so malformed data can break the UI.
+
+## RAW_DATA widgets
+
+### workstation
+
+Used for mode and toolbar state.
+
+Required or consumed fields:
+
+~~~ts
+{
+  activity: 'pick/order' | 'pick/adhoc' | 'putaway/container' | 'putaway/adhoc',
+  hasPausedTasks?: boolean,
+  taskAssignmentMode?: string,
+  canPauseTasks?: boolean
+}
+~~~
+
+Effects:
+
+- activity selects picking, hot-picking, putaway, or hot-putaway.
+- hasPausedTasks controls Resume.
+- taskAssignmentMode !== 'NONE' enables assignment behavior.
+- canPauseTasks enables Suspend.
+
+### ports
+
+Consumed by AsrsWorkstationStore.ports and rendered by PortsViewer.
+
+JSON array element shape:
+
+~~~ts
+{
+  name: string,
+  state?: string,
+  taskGroup?: string,
+  taskCount?: number
+}
+~~~
+
+The viewer displays each port, shows MOVING state, taskGroup, and remaining taskCount.
+
+### tote
+
+Consumed by AsrsWorkstationStore.tote and ToteViewer.
+
+~~~ts
+{
+  name: string,
+  bins: Array<{
+    referenceNo: string,
+    x?: number,
+    y?: number,
+    width?: number,
+    height?: number
+  }>,
+  selectedBin: {
+    name: string,
+    quantity: {
+      quantity?: number | string,
+      unit?: string
+    }
+  }
+}
+~~~
+
+selectedBin.name identifies the highlighted bin. selectedBin.quantity.quantity is displayed as an EA quantity. ToteViewer is visible only while status is waiting.
+
+### carrier
+
+Parsed by the store carrier and shelf getters. It is not actively rendered by the current tote template.
+
+~~~ts
+{
+  layout?: { properties?: string },
+  shelves: Array<{
+    referenceNo: string,
+    layout?: { properties?: string },
+    bins: Array<{
+      referenceNo: string,
+      name: string,
+      x: number,
+      y: number,
+      layout?: { properties?: string }
+    }>
+  }>,
+  selectedBin?: {
+    shelf: string,
+    name: string,
+    quantity?: unknown
+  }
+}
+~~~
+
+Layout properties are expected to be JSON-encoded strings. Bin sizing depends on the first four characters of each bin name.
+
+### position
+
+Read from widget.elements rather than widget.data.
+
+~~~ts
+{
+  name: string,
+  label: string,
+  type: 'STRING',
+  action: 'NONE',
+  value: string
+}
+~~~
+
+Logical fields expected by the UI are position, carousel, carrier, shelf, bin, and binDepth.
+
+No position widget means status is standing. A position widget plus an instruction normally means status is waiting. The detailed position fields are currently commented out in AsrsProcessSection.
+
+### staging
+
+Consumed by PutwallViewer, PutwallCard, assignment dialogs, and ShortPickDialog.
+
+JSON array element shape:
+
+~~~ts
+{
+  name: string,
+  taskCount?: number,
+  orderNo?: string,
+  container?: string,
+  instructions?: string,
+  quantity?: string,
+  unit?: string,
+  taskId?: string
+}
+~~~
+
+Assignment dialogs choose stations whose taskCount is absent or zero and which are not already assigned.
+
+### task
+
+Consumed by quantity, item, the page summary, AsrsProcessSection, and ShortPickDialog.
+
+Required elements include:
+
+~~~ts
+[
+  {
+    name: 'quantity',
+    value: { quantity: number | string, unit?: string }
+  },
+  {
+    name: 'itemNo',
+    value: string
+  }
+]
+~~~
+
+The store currently hardcodes the displayed unit to EA. The item getter requires both task and item widgets.
+
+### item
+
+Consumed together with task.
+
+~~~ts
+[
+  { name: 'imageURL', value?: string },
+  { name: string, value: string }
+]
+~~~
+
+The store uses imageURL for the product image and maps all other elements into DisplayFieldSet fields. The item name comes from task.itemNo. If either item or task is missing, item details and confirmation controls are not shown.
+
+## Instruction and status requirements
+
+The page displays displayState.instruction.message. Special message types are:
+
+- g2p/message/waiting-completion -> holding
+- g2p/message/waiting-carousel -> moving
+
+No instruction -> refreshing.
+
+Status flow:
+
+~~~text
+no displayData                 -> initializing
+sending === true               -> sending
+no instruction                 -> refreshing
+waiting-completion             -> holding
+waiting-carousel               -> moving
+no position widget             -> standing
+otherwise                      -> waiting
+~~~
+
+The page uses these states for skeletons, task details, action buttons, assignment buttons, and tote visibility.
+
+## Backend actions
+
+POST /action actions used by the page:
+
+- g2p/asrs/refresh-state
+- g2p/pause
+- g2p/resume
+- g2p/select-activity with pick/order
+- g2p/select-activity with putaway/container
+
+Child process actions include:
+
+- g2p/confirm-task
+- g2p/skip-task
+- short-pick flow
+
+Assignment dialogs use:
+
+- GET /orders
+- GET /containers
+- g2p/assign-orders
+- g2p/assign-containers
+
+The ASRS controller exposes orders and containers under:
+
+~~~text
+/api/applications/g2p/asrs/orders
+/api/applications/g2p/asrs/containers
+~~~
+
+The base path is configurable through tes.local-agent.application.application-path.
+
+## Child component tree
+
+~~~text
+AsrsWorkstationPage.vue
+├── HandheldInstruction
+├── PortsViewer -> EquipmentViewerSquare
+├── ToteViewer -> EquipmentViewerSquare
+├── AsrsProcessSection -> DisplayFieldSet, ItemQuantityTag,
+│   MessageDisplayMobile, ShortPickDialog
+├── PutwallViewer -> PutwallCard
+├── ItemQuantityTag
+├── AssignOrdersDialog
+└── AssignContainersDialog
+~~~
+
+All ASRS child components use AsrsWorkstationStore, which reads RuntimeStore.
+
+## Operational checklist
+
+For a fully populated workstation view, verify:
+
+- authenticated session and lookupId;
+- successful state fetch and websocket updates;
+- displayData.widgets array;
+- workstation widget;
+- ports, tote, and staging widgets;
+- position widget plus instruction for an active task;
+- task and item widgets;
+- valid JSON in every JSON-backed widget;
+- backend support for the actions above.
+
+## Source files
+
+- tes-agent/src/ui/src/pages/asrs/AsrsWorkstationPage.vue
+- tes-agent/src/ui/src/stores/model/widgets/AsrsWorkstationStore.ts
+- tes-agent/src/ui/src/stores/RuntimeStore.ts
+- tes-agent/src/ui/src/stores/model/Workstation.ts
+- tes-agent/src/ui/src/components/widgets/equipmentViewer/asrs/PortsViewer.vue
+- tes-agent/src/ui/src/components/widgets/equipmentViewer/asrs/ToteViewer.vue
+- tes-agent/src/ui/src/components/widgets/equipmentViewer/putwall/PutwallViewer.vue
+- tes-agent/src/ui/src/pages/asrs/AsrsProcessSection.vue
+- tes-agent/src/ui/src/pages/asrs/AssignOrdersDialog.vue
+- tes-agent/src/ui/src/pages/asrs/AssignContainersDialog.vue
+- tes-agent/src/ui/src/pages/asrs/ShortPickDialog.vue
+- tes-agent/src/main/java/com/onomatic/tes/agent/application/g2p/asrs/AsrsG2PRestController.java

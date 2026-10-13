@@ -1,0 +1,71 @@
+# CPF North AutoStore
+
+## Scope
+
+This page documents the active CPF North AutoStore configuration and its picking/putaway application boundary. It links the detailed [[CPF North AutoStore Picking Flow]] and [[CPF North AutoStore Putaway Flow]] notes.
+
+The source of truth is the repository configuration and Java/Kotlin implementation. Rows marked as comments in configuration are not treated as active behavior.
+
+## Configuration map
+
+| Concern | Active source |
+|---|---|
+| Workflow definitions | `resources/config/customers/ahs/cpf-north/workflows/cpf-north-autostore-workflow.csv` |
+| AutoStore equipment, ports, bins, stations | `resources/config/customers/ahs/cpf-north/cpf-north-autostore.csv` |
+| Agent application/controller | `tes-agent/src/main/java/com/onomatic/tes/agent/application/g2p/asrs/AsrsG2PController.java` |
+| G2P application behavior | `tes-activity/src/main/java/com/onomatic/tes/activity/g2p/application/AsrsG2PApplicationDef.java` |
+| Generic work/task dispatch | `tes-engine/src/main/java/com/onomatic/tes/engine/core/dispatcher/WorkDispatcher.java` |
+| Workflow activity orchestration | `tes-engine/src/main/java/com/onomatic/tes/engine/core/workflow/activity/WorkflowActivityDef.java` |
+| AutoStore adapter | `tes-agent/src/main/java/com/onomatic/tes/agent/manufacturer/autostore/AutostoreController.java` |
+
+## Active workflow graph
+
+The dedicated CSV defines:
+
+- Work request types: `order/pick` for picking and `container/putaway` for putaway.
+- Workflows: `Autostore Picking` and `Autostore Putaway`.
+- Picking steps: `preposition`, `pick`, and `hot-pick`.
+- Putaway steps: `preposition`, `putaway`, `return`, and `hot-putaway`.
+- Picking resources: the AutoStore preposition resource and pick workstations `autostore-pick-01` and `autostore-pick-02`.
+- Putaway resources: the AutoStore preposition/return resources and the decanting station `autostore-put-01`.
+
+The customer equipment CSV supplies the physical model: AutoStore equipment, the G2P application, decanting and picking workstations, tote storage assets, AutoStore ports, staging positions, and bins.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    C[Work request / order or container] --> E[TES engine]
+    E --> W[Workflow activity]
+    W --> G[G2P application]
+    G --> R[Task group]
+    R --> A[Agent controller]
+    A --> AS[AutoStore SDK]
+    AS --> F[AutoStore events]
+    F --> A
+    A --> W
+    W --> P[PostgreSQL projections]
+    C -. config .-> CSV[CPF North workflow CSV]
+    CSV -. graph .-> W
+```
+
+See [[TES Workflow Concepts]], [[TES Runtime Flows]], [[TES Agent Applications StatefulApplication]], and [[TES Sagas Projections]] for the platform-level model.
+
+## Application behavior
+
+`AsrsG2PApplicationDef` exposes the operator-facing actions:
+
+- `assignOrders`: resolves selected order activities, inventory snapshots, staging positions, and creates or reuses a picking task group.
+- `assignContainers`: finds READY `putaway/container/put-container` task requests, assigns them to a workstation staging position, and creates or reuses a putaway task group.
+- `startGroup`, `pauseTasks`, `resumeTasks`, and `confirmHandling`: drive operator and equipment state.
+- `refreshState` and `displayState`: rebuild the display from task-group and activity state.
+
+The agent endpoint is exposed by `AsrsG2PController`. It lists pickable work orders at `/v1/sites/$SITE/work-orders/orders` and ready putaway containers at `/v1/sites/$SITE/tasks`.
+
+## Important source-truth caveats
+
+1. The picking task relation in the dedicated CSV is commented out. The active file does not prove a live `preposition completed -> pick-order` task relation. The preposition and pick task definitions are implemented, but their runtime linkage depends on workflow/request expansion elsewhere.
+2. `PutawayHandleStorageDef` currently completes its task during `ActivityTaskStartedEvent`, despite its comment describing completion after items are put away. This can activate the configured return relation earlier than the intended business meaning.
+3. The active CSV uses `handle-storage`, not `put-container-items`. The item-by-item implementation exists but is not selected by this configuration.
+4. `G2PPortWorkstationPutawayDef.putItems` is currently empty and its invocation is commented out, so workstation item handling is not fully implemented in this source snapshot.
+5. The older `cpf-north-workflows.csv` contains commented ASRS workflow rows. They are historical/inactive here; the dedicated AutoStore workflow CSV is the active definition used by these notes.

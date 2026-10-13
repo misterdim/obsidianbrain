@@ -1,0 +1,168 @@
+# CPF North AutoStore Putaway Flow
+
+Parent: [[CPF North AutoStore]]  
+Related: [[TES Runtime Flows]], [[TES Workflow Concepts]], [[TES Axon Aggregates]]
+
+## Configuration
+
+Source: `resources/config/customers/ahs/cpf-north/workflows/cpf-north-autostore-workflow.csv`.
+
+Active putaway configuration:
+
+- Work request: `putaway-container`, type `container/putaway`.
+- Workflow: `Autostore Putaway`.
+- Steps: `preposition`, `putaway`, `return`; `hot-putaway` is an adhoc alternative.
+- Resources: AutoStore preposition and return resources, plus decanting workstation `autostore-put-01`.
+- Preposition end: `putaway-port`, typed `autostore-in-port`.
+- Putaway starts at `putaway-port`; storage destination is an `autostore-tote` position in `autostore-zone`.
+- Return starts at `return-port`.
+- Active tasks: `put-container`, `handle-tote`, `preposition-tote`, and `return-tote`.
+- Explicit task relations:
+  - `handle-tote` created -> activate `preposition-tote`.
+  - `handle-tote` completed -> activate `return-tote`.
+
+## End-to-end event flow
+
+```mermaid
+sequenceDiagram
+    participant Source as Container/work request
+    participant Engine as TES engine
+    participant App as AsrsG2PApplication
+    participant Station as Decanting station
+    participant ASRS as AutoStore agent
+
+    Source->>Engine: RequestWorkCreationCommand
+    Engine->>Engine: Create work request and container
+    Engine-->>App: READY put-container task request
+    App->>Engine: RequestTaskAssignmentCommand
+    Engine-->>Engine: TaskRequestAssignedEvent / ActivityTaskStartedEvent
+    Engine->>Station: PICK_CONTAINER
+    Station-->>Engine: CONTAINER_PICKED
+    Engine->>Station: DROP_CONTAINER
+    Station-->>Engine: CONTAINER_DROPPED
+    Engine-->>Engine: put-container completed
+    Engine->>Engine: handle-tote starts and currently completes immediately
+    Engine->>ASRS: PREPOSITION_TOTE
+    ASRS-->>Engine: tote movement completed
+    Engine->>Station: item handling hook (currently incomplete)
+    Engine->>ASRS: RETURN_TOTE
+    ASRS-->>Engine: bin closed / tote returned
+    Engine-->>Source: asset/work completion
+```
+
+## 1. Work request and task assignment
+
+`WorkDispatcher` creates the work request and, on `WorkRequestReadyEvent`, requests tasks from accepted workflow relations.
+
+The G2P application exposes ready putaway containers through:
+
+`tes-agent/src/main/java/com/onomatic/tes/agent/application/g2p/asrs/AsrsG2PController.java`
+
+Its `listContainers` query filters READY tasks with type `putaway/container/put-container`.
+
+`AsrsG2PApplicationDef.assignContainers` then:
+
+1. Resolves the selected workstation.
+2. Finds READY put-container task requests.
+3. Assigns each request to a staging position.
+4. Creates or reuses a putaway task group of type `PutawayActivityType.CONTAINER`.
+5. Sends `RequestTaskAssignmentCommand` with a `TaskRequestResource` and `MovePositionContext`.
+6. Starts the group.
+
+The task request assignment path is handled by:
+
+`tes-engine/src/main/java/com/onomatic/tes/engine/core/workflow/activity/WorkflowActivityDef.java`
+
+When the request is assigned, the activity creates the `put-container` activity task and starts it.
+
+## 2. Container movement at the decanting workstation
+
+The active task is `putaway/container/put-container`, implemented by:
+
+`tes-activity/src/main/java/com/onomatic/tes/activity/putaway/task/PutawayContainerTaskDef.java`
+
+Its resource event loop is:
+
+1. `ActivityTaskStartedEvent` creates a `PICK_CONTAINER` equipment task at the source position.
+2. `CONTAINER_PICKED` creates a `DROP_CONTAINER` equipment task from source to destination.
+3. `CONTAINER_DROPPED` completes the activity.
+4. `ActivityTaskCompletedEvent` with `PUT_CONTAINER` completes the asset activity at the end position.
+
+The activity-level factory is:
+
+`tes-activity/src/main/java/com/onomatic/tes/activity/putaway/PutawayActivityDef.java`
+
+It selects the resource implementation by variant. A G2P port workstation uses `G2PPortWorkstationPutawayDef`; ordinary workstation/forklift variants use their corresponding move definitions.
+
+## 3. Tote preposition and return
+
+The active relation `handle-tote/preposition-tote` requests the storage move. The shared implementation is:
+
+- `tes-activity/src/main/java/com/onomatic/tes/activity/preposition/task/PrepositionStorageMoveDef.java`
+- `tes-activity/src/main/java/com/onomatic/tes/activity/preposition/PrepositionActivityDef.java`
+
+The preposition path resolves the tote workflow asset and remaps a storage move to the staging/port position. For AutoStore it reaches:
+
+- `tes-agent/src/main/java/com/onomatic/tes/agent/equipment/asrs/IAsrsController.java`: `PREPOSITION_TOTE` -> `prepositionBins`.
+- `tes-agent/src/main/java/com/onomatic/tes/agent/equipment/asrs/AsrsController.java`: task-group and tote mapping.
+- `tes-agent/src/main/java/com/onomatic/tes/agent/manufacturer/autostore/AutostoreController.java`: AutoStore API/log integration.
+
+The return relation `handle-tote/return-tote` is activated on `task/completed`. Its active task is `return/storage/move`, and the AutoStore adapter maps `RETURN_TOTE` to `returnBin`. AutoStore closes the bin and emits the internal sequence represented by `BinClosed`, `PortClosed`, and tote-returned/resource completion events.
+
+## 4. Item handling path and current implementation gap
+
+The repository also contains an item-aware task:
+
+`tes-activity/src/main/java/com/onomatic/tes/activity/putaway/task/PutawayContainerItemsTaskDef.java`
+
+If selected, it would:
+
+- pick the container;
+- create one item put operation at a time;
+- translate `ITEM_PUT` into `ActivityTaskExecution`;
+- move the empty container to the end position;
+- complete the activity.
+
+However, the CPF North AutoStore CSV selects `handle-tote` (`putaway/container/handle-storage`) instead of `put-container-items`.
+
+The selected handle task is implemented by:
+
+`tes-activity/src/main/java/com/onomatic/tes/activity/putaway/task/PutawayHandleStorageDef.java`
+
+Current behavior:
+
+- On `ActivityTaskStartedEvent`, it immediately calls `completeTask`.
+- On completion, it sends `CompleteWorkAssetCommand` for the workflow asset and then completes its superclass behavior.
+
+The source comment says it should complete after items are put away, but the executable code does not wait for item events. In addition,:
+
+`tes-activity/src/main/java/com/onomatic/tes/activity/putaway/resource/G2PPortWorkstationPutawayDef.java`
+
+has the item-put invocation commented out and `putItems` empty. Therefore the configured event chain is structurally present, but the decant/item-handling business step is incomplete in this source snapshot.
+
+## 5. State transitions to trace
+
+For diagnostics, correlate:
+
+- Work request: created -> ready -> task creation requested.
+- Task request: created -> ready -> assignment requested -> assigned -> started -> completed.
+- Activity task: created -> ready -> started -> executed/completion requested -> completed.
+- Resource task: created -> submitted/dispatched -> started -> executed -> completed.
+- Task group: created -> ready -> assigned -> started -> refreshed/paused/completed.
+- AutoStore: port assigned/opened, movement started/completed, bin closed, port closed.
+
+Definitions are in:
+
+- `tes-coreapi/src/main/kotlin/com/onomatic/tes/coreapi/task/activity/events.kt`
+- `tes-coreapi/src/main/kotlin/com/onomatic/tes/coreapi/task/resource/events.kt`
+- `tes-coreapi/src/main/kotlin/com/onomatic/tes/coreapi/task/request/events.kt`
+- `tes-coreapi/src/main/kotlin/com/onomatic/tes/coreapi/task/group/events.kt`
+- `tes-coreapi/src/main/kotlin/com/onomatic/tes/coreapi/equipment/type/asrs/events.kt`
+- `tes-coreapi/src/main/kotlin/com/onomatic/tes/coreapi/equipment/type/forklift/definitions.kt`
+
+## Traceability
+
+- G2P application: `tes-activity/src/main/java/com/onomatic/tes/activity/g2p/application/AsrsG2PApplicationDef.java`
+- Agent controller: `tes-agent/src/main/java/com/onomatic/tes/agent/application/g2p/asrs/AsrsG2PController.java`
+- Activity orchestration: `tes-engine/src/main/java/com/onomatic/tes/engine/core/workflow/activity/WorkflowActivityDef.java`
+- Dispatch and work creation: `tes-engine/src/main/java/com/onomatic/tes/engine/core/dispatcher/WorkDispatcher.java`

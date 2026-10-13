@@ -1,0 +1,17 @@
+{
+  "id": "6a652725-e3cb-43bb-847f-e4994b7024ae",
+  "state": "rolled_back",
+  "createdAt": "2026-09-22T17:49:05.014Z",
+  "snapshots": [
+    {
+      "path": "applications/ui/AsrsWorkstationPage.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "applying",
+      "plannedEtag": "936dff43c9907417ee62a17c63bf79f0dbc9546788c52e5cef34090ebf94921a",
+      "recoverable": true,
+      "existed": false
+    }
+  ],
+  "completedAt": "2026-09-22T17:49:05.024Z"
+}

@@ -1,0 +1,39 @@
+---
+title: TES Architecture
+project: TES
+document_type: technical-wiki
+area: architecture
+tags: [tes, technical-wiki, architecture]
+updated: 2026-09-22
+---
+
+# TES Architecture
+
+TES is a modular Spring Boot warehouse/task-execution platform. `tes-app` assembles the domain modules; `tes-agent` is a separate runtime for device and operator applications.
+
+```mermaid
+flowchart LR
+  host[WMS / host] --> imp[Host importer]
+  imp --> eng[Execution engine]
+  cfg[Configuration] --> eng
+  inv[Inventory] --> eng
+  act[Activities] --> eng
+  eng --> exp[Exporter / webhooks]
+  eng --> broker[Broker messaging]
+  broker --> agent[Agent runtime]
+  agent --> devices[Devices / automation / UI]
+  web[Web UI API] --> eng
+  eng --> store[(PostgreSQL projections + Axon event store)]
+```
+
+Architectural characteristics:
+
+- CQRS-style command/query separation.
+- Axon aggregates on the command side; events feed projectors and query services.
+- Workflow definitions are graph-shaped configuration; work/task aggregates represent runtime execution.
+- Tenant/site-aware REST and configuration surfaces.
+- Domain modules are libraries assembled into the main application.
+
+Related: [[TES Bounded Contexts]], [[TES Spring Boot Modules]], [[TES Runtime Flows]].
+
+Source: `settings.gradle`, `build.gradle`, `tes-app/src/main/java/com/onomatic/tes/TaskExecutionSystemApplication.java`, `tes-engine/src/main/java/com/onomatic/tes/engine/`.

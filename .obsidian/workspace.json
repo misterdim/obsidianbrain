@@ -1,0 +1,219 @@
+{
+  "main": {
+    "id": "cafe64535497b9df",
+    "type": "split",
+    "children": [
+      {
+        "id": "4268933706288707",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "a5c0ea16136bb2e9",
+            "type": "leaf",
+            "state": {
+              "type": "empty",
+              "state": {},
+              "icon": "lucide-file",
+              "title": "New tab"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "811f7457a2c472a3",
+    "type": "split",
+    "children": [
+      {
+        "id": "03f5aba862c86dec",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "7691cff2920a0d41",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "df4dbcd37a1df8d5",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "e13b3135bfb52257",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 457.5
+  },
+  "right": {
+    "id": "2bb9ae4c89b62559",
+    "type": "split",
+    "children": [
+      {
+        "id": "f6e23ffc56fdb3a6",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "ac8c8e9c9578ea37",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks"
+            }
+          },
+          {
+            "id": "d05b0f851d445a85",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links"
+            }
+          },
+          {
+            "id": "7cf948a69b3f92e8",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
+            }
+          },
+          {
+            "id": "868289626ffb81bf",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "c0127b70c8f0fd03",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "daily-notes:Open today's daily note": false,
+      "templates:Insert template": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "7691cff2920a0d41",
+  "lastOpenFiles": [
+    "Projects/_Wiki Schema.md",
+    "Projects/tes/Files.md",
+    "Projects/tes/AHS Agent Authentication Flow.md",
+    "Projects/tes/Updates.md",
+    "Projects/task-execution-system/Updates.md",
+    "Projects/task-execution-system/Files.md",
+    "Projects/tes/Applications/UI/AsrsWorkstationPage.md",
+    "Projects/tes/Integration Notes.md",
+    "Projects/task-execution-system/AHS Agent Authentication Flow.md",
+    "Projects/task-execution-system",
+    "Projects/tes/Applications/CPF North AutoStore Putaway Flow.md",
+    "Projects/tes/TES Agent Applications StatefulApplication.md",
+    "Projects/tes/TES Axon Aggregates.md",
+    "Projects/tes/Applications/CPF North AutoStore.md",
+    "Projects/tes/TES Workflow Concepts.md",
+    "Projects/tes/TES Runtime Flows.md",
+    "Projects/tes/TES Repository Map.md",
+    "Projects/tes/Applications/Yourbar Chateauguay Workflow Applications.md",
+    "applications/ui/AsrsWorkstationPage.md",
+    "Projects/tes/Applications/UI",
+    "applications/ui",
+    "applications",
+    "Untitled.base",
+    "Projects/tes/Applications/CPF North AutoStore Picking Flow.md",
+    "Projects/tes/Applications/Yourbar Count Application Flow.md",
+    "Projects/tes/Applications/Yourbar Forklift.md",
+    "Projects/tes/Applications/Yourbar Production Station Application.md",
+    "Projects/tes/Applications/Yourbar Shipping Application.md",
+    "Projects/tes/Applications/Yourbar Receiving Application.md",
+    "Projects/tes/Applications/Yourbar Count Application.md",
+    "Projects/tes/TES Commands Events Handlers.md",
+    "Projects/tes",
+    "Projects/WCS",
+    "Projects",
+    "desktop.ini"
+  ]
+}

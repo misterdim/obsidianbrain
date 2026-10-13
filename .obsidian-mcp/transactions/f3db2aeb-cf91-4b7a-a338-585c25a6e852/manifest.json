@@ -1,0 +1,29 @@
+{
+  "id": "f3db2aeb-cf91-4b7a-a338-585c25a6e852",
+  "state": "committed",
+  "createdAt": "2026-09-22T12:55:47.832Z",
+  "snapshots": [
+    {
+      "path": "Projects/TES/TES Index.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "applied",
+      "plannedEtag": "7cd4209e47ddda4bfafc26e2edd055d108427ca12016e78e38af7f370dacda1e",
+      "recoverable": true,
+      "existed": false,
+      "committedEtag": "7cd4209e47ddda4bfafc26e2edd055d108427ca12016e78e38af7f370dacda1e"
+    },
+    {
+      "path": "Projects/WCS/WCS Index.md",
+      "operation": "delete",
+      "entryType": "file",
+      "phase": "applied",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "7cd4209e47ddda4bfafc26e2edd055d108427ca12016e78e38af7f370dacda1e",
+      "snapshot": "1.bin"
+    }
+  ],
+  "completedAt": "2026-09-22T12:55:47.854Z"
+}

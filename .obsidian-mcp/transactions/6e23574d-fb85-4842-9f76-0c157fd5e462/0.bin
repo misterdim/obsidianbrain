@@ -1,0 +1,33 @@
+# TES Sagas and Projections
+
+Axon saga infrastructure is configured through a JPA saga store and cache, but no application class annotated `@Saga` was found in the current source pass. Long-running coordination is visibly implemented through dispatchers, event listeners, aggregate relationships and agent sessions.
+
+Event processor configuration includes subscribing processors and tracking groups:
+
+- `application-processor`
+- `async-processor`
+- `agent-processor`
+
+Observed processing groups include `job`, `item`, `transaction` and `async`.
+
+Representative projections/query services:
+
+- `WorkProjector`, `WorkQueryService`
+- `ItemProjector`, `ItemMovementProcessor`, `ItemQueryService`
+- asset/container/location projectors and query services
+- `MessageLogService`, `MessageQueryService`
+- `WebhookMonitor`, `WebhookViewQueryService`
+- `EventMonitor`, common query services
+
+```mermaid
+flowchart LR
+  event[Domain event] --> processor[Axon processor]
+  processor --> projector[Projector / listener]
+  projector --> view[(JPA read model)]
+  query[Query handler] --> view
+  processor --> followup[Follow-up command/integration]
+```
+
+Projection updates can be asynchronous; REST list/status APIs should be treated as eventually consistent read models.
+
+Source: `tes-common/src/main/java/com/onomatic/tes/common/axon/AxonMessageInterceptorConfig.java`; `tes-common/src/main/java/com/onomatic/tes/common/projector/persistence/`; `tes-engine/src/main/java/com/onomatic/tes/engine/work/persistence/WorkProjector.java`; `tes-inventory/src/main/java/com/onomatic/tes/inventory/item/persistence/ItemProjector.java`; `tes-message-broker/src/main/java/com/onomatic/tes/agent/`.

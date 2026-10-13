@@ -1,0 +1,42 @@
+# WCS Agent Applications and StatefulApplication
+
+There are two related layers:
+
+1. `tes-agent` configured applications/sessions, builders, controllers and device-facing REST/WebSocket behavior.
+2. `tes-engine`/`tes-activity` application definitions that react to domain events.
+
+## StatefulApplicationDef
+
+`StatefulApplicationDef<T extends StatefulSessionDef>` extends `ApplicationDef`. For each supported event it:
+
+1. obtains the current `ApplicationState<T>`;
+2. calls the matching `state.on<Event>(session, event, context)`;
+3. stores the returned state with `session.updateState(state)`.
+
+Supported inputs include application initialization/input, activity/resource task lifecycle, task groups, work requests, item receipt/pick/put/adjustment, equipment/device input/state and session inactivation.
+
+```mermaid
+sequenceDiagram
+  participant E as Domain event
+  participant D as StatefulApplicationDef
+  participant S as StatefulSessionDef
+  participant ST as ApplicationState
+  participant UI as Agent UI/device
+  E->>D: callback
+  D->>S: getCurrentState()
+  S-->>D: current state
+  D->>ST: on<Event>(...)
+  ST-->>D: next state
+  D->>S: updateState(next)
+  S->>UI: display/action/message
+```
+
+Concrete activity definitions include ASRS/carousel G2P, receiving/unplanned/returns, forklift move, worker/workstation/WO production, cart/cluster/AMR picking, putwall/worker consolidation, APM, count, shipping and admin/light assignment.
+
+Agent composition: `ConnectorFactory` selects builders; builders create controllers/sessions; sessions use query/routing services and display widgets/actions.
+
+This is a session/application behavior layer, not an Axon aggregate.
+
+Related: [[TES Workflow Concepts]], [[WCS Runtime Flows]], [[TES RabbitMQ Topology]].
+
+Source: `tes-engine/src/main/java/com/onomatic/tes/engine/core/model/application/StatefulApplicationDef.java`; `tes-engine/src/main/java/com/onomatic/tes/engine/core/model/application/ApplicationDef.java`; `tes-engine/src/main/java/com/onomatic/tes/engine/core/model/session/StatefulSessionDef.java`; `tes-engine/src/main/java/com/onomatic/tes/engine/core/model/application/state/`; `tes-activity/src/main/java/com/onomatic/tes/activity/*/application/`; `tes-agent/src/main/java/com/onomatic/tes/agent/application/`; `tes-agent/src/main/java/com/onomatic/tes/agent/connector/ConnectorFactory.java`.

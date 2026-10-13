@@ -1,0 +1,32 @@
+# WCS PostgreSQL Persistence
+
+Persistence covers Axon events/tokens, projections, configuration/operational entities and Liquibase-managed schema.
+
+```mermaid
+flowchart TB
+  cmd[Command] --> agg[Aggregate]
+  agg --> event[(JPA event store)]
+  event --> token[(JPA token store)]
+  event --> proc[Tracking processor]
+  proc --> proj[ProjectorService]
+  proj --> views[(Projection tables)]
+  query[Query handler] --> views
+```
+
+`AxonJpaConfig` creates a JPA `EventStorageEngine` and `JpaTokenStore`. It selects a SQL Server event storage builder only when the JDBC URL contains `sqlserver`; otherwise it uses JPA. Gap settings are `tes.axon.jpa.max-gap-offset` (1000) and `tes.axon.jpa.gap-cleaning-threshold` (100).
+
+Root JPA settings include custom physical naming, batch size 100, ordered inserts/updates and `open-in-view: false`.
+
+Schema/bootstrap sources:
+
+- `tes-app/src/main/resources/db/changelog/`
+- `resources/sql/create_database.sql`
+- `resources/sql/entrypoint.sh`
+- `resources/sql/tes_indexes.sql`
+- `resources/sql/tes_indexes_validation.sql`
+
+Projection infrastructure: `ProjectorService`, `BaseProjectionRepository`, domain `*Projector` classes and JPA views.
+
+Related: [[WCS Axon Aggregates]], [[WCS Sagas Projections]], [[TES Deployment Architecture]].
+
+Source: `tes-common/src/main/java/com/onomatic/tes/common/axon/AxonJpaConfig.java`; `tes-common/src/main/java/com/onomatic/tes/common/projector/persistence/`; `tes-app/src/main/resources/application.yaml`.

@@ -1,0 +1,150 @@
+# CPF North AutoStore Picking Flow
+
+Parent: [[CPF North AutoStore]]  
+Related: [[TES Runtime Flows]], [[TES Workflow Concepts]], [[TES Axon Aggregates]]
+
+## Configuration
+
+Source: `resources/config/customers/ahs/cpf-north/workflows/cpf-north-autostore-workflow.csv`.
+
+Active picking configuration:
+
+- Work request: `pick`, type `order/pick`.
+- Workflow: `Autostore Picking`.
+- Steps: `preposition` (`preposition/storage`) then `pick` (`pick/order`); `hot-pick` is an adhoc alternative.
+- Resources: AutoStore preposition plus pick workstations `autostore-pick-01` and `autostore-pick-02`.
+- Preposition end: `picking-port`, typed `autostore-out-port`.
+- Pick start: `picking-port`; pick end: `autostore-staging`.
+- Staging: A01–A06 for pick station 01 and B01–B06 for pick station 02.
+- Active tasks: `preposition/storage/move` and `pick/order/pick-item`.
+- `pick-from-tote` and its preposition relation are commented out.
+
+## End-to-end event flow
+
+```mermaid
+sequenceDiagram
+    participant Client as Work request/order
+    participant Engine as WorkDispatcher
+    participant Workflow as WorkflowActivityDef
+    participant App as AsrsG2PApplication
+    participant ASRS as AutoStore agent
+    participant Station as Pick workstation
+
+    Client->>Engine: RequestWorkCreationCommand
+    Engine->>Engine: Create work order/container
+    Engine->>Workflow: CreateWorkRequestCommand
+    Engine-->>Workflow: WorkRequestReadyEvent
+    Workflow->>Workflow: RequestTaskCreationCommand
+    Workflow-->>Workflow: TaskCreationRequestedEvent
+    Workflow->>Workflow: Create preposition activity/resource task
+    Workflow->>ASRS: PREPOSITION_TOTE / task group
+    ASRS-->>Workflow: tote movement started/completed
+    Workflow-->>App: activity/task-group state refreshed
+    App->>Workflow: assignOrders / create pick group
+    Workflow->>Station: AssignTaskRequestCommand
+    Workflow->>Station: PICK_ITEM equipment task
+    Station-->>Workflow: ITEM_PICKED resource execution
+    Workflow-->>Workflow: ActivityTaskExecuted(PICK_ITEM)
+    Workflow->>Station: next PICK_ITEM or DROP_CONTAINER
+    Station-->>Workflow: CONTAINER_DROPPED
+    Workflow-->>Client: pick activity/work completion
+```
+
+## 1. Work creation and preposition
+
+The engine receives a work creation request and creates the work order, work container, and work request. `WorkDispatcher` reacts to `WorkRequestReadyEvent`, evaluates accepted workflow relations, and requests task creation.
+
+The preposition task is defined by:
+
+- `tes-activity/src/main/java/com/onomatic/tes/activity/preposition/task/PrepositionStorageMoveDef.java`
+- `tes-activity/src/main/java/com/onomatic/tes/activity/preposition/PrepositionActivityDef.java`
+
+The activity creates a storage move with the tote as a workflow output/input asset. The task transitions through activity/task request events such as created, ready, assigned, started, and completed. Its resource implementation becomes an AutoStore equipment request.
+
+The agent-side mapping is:
+
+- `tes-agent/src/main/java/com/onomatic/tes/agent/equipment/asrs/IAsrsController.java`: maps `PREPOSITION_TOTE` to `prepositionBins`.
+- `tes-agent/src/main/java/com/onomatic/tes/agent/equipment/asrs/AsrsController.java`: builds `AsrsMoveInstructions` and converts internal events to core inputs.
+- `tes-agent/src/main/java/com/onomatic/tes/agent/manufacturer/autostore/AutostoreController.java`: opens the port, creates the AutoStore task group, and reacts to AutoStore log events.
+- `tes-coreapi/src/main/kotlin/com/onomatic/tes/coreapi/equipment/type/asrs/definitions.kt`: defines `tote/preposition` and `tote/prepositioned`.
+
+The physical event chain is:
+
+1. Assign a task group to the AutoStore port.
+2. Open the output port.
+3. Open the requested tote/bin.
+4. Submit the movement group to AutoStore.
+5. AutoStore reports movement start and movement completion.
+6. TES converts the report to resource/task execution events.
+7. The workflow completes the preposition activity when its resource work is complete.
+
+## 2. Operator assignment
+
+`AsrsG2PApplicationDef.assignOrders`:
+
+1. Ignores adhoc activities.
+2. Resolves the selected work-order activities by reference number.
+3. Loads a `ZoneInventorySnapshot`.
+4. Uses `PickCreationContext` to map each selected order to its station staging position.
+5. Creates or reuses a task group of type `PickActivityType.ORDER`.
+6. Starts the work orders and task group.
+
+`AsrsG2PController.listOrders` supplies the UI list by filtering current workflow activities with status CREATED and sorting by priority and `endBefore`.
+
+The workstation grouping policy is in:
+
+`tes-activity/src/main/java/com/onomatic/tes/activity/pick/resource/workstation/WorkstationPickingDef.java`
+
+It partitions pick lists into groups of six. The resource base class is:
+
+`tes-activity/src/main/java/com/onomatic/tes/activity/pick/resource/PickingEquipmentDef.java`
+
+## 3. Item pick and container drop
+
+The active pick task is `pick/order/pick-item`, implemented by:
+
+`tes-activity/src/main/java/com/onomatic/tes/activity/pick/task/PickOrderDef.java`
+
+On activity start it finds the order-pick tasks and assigns READY task requests to the current workstation resource. It then creates the next equipment task:
+
+- If an incomplete pick line exists: `ForkliftTaskType.PICK_ITEM` with a `ResourceTaskItem`.
+- Otherwise: `ForkliftTaskType.DROP_CONTAINER` from the source asset position to the station end/staging position.
+
+Resource completions drive the loop:
+
+- `ITEM_PICKED` becomes an `ActivityTaskExecution` with `OrderPickTaskType.PICK_ITEM`.
+- The next incomplete line creates another pick task.
+- `CONTAINER_DROPPED` completes the pick activity when no work remains.
+
+The relevant equipment task and execution enums are in:
+
+- `tes-coreapi/src/main/kotlin/com/onomatic/tes/coreapi/equipment/type/forklift/definitions.kt`
+- `tes-coreapi/src/main/kotlin/com/onomatic/tes/coreapi/activity/pick/definitions.kt`
+
+## Event vocabulary
+
+The generic workflow emits and consumes:
+
+- Activity: `ActivityTaskCreatedEvent`, `ActivityTaskReadyEvent`, `ActivityTaskStartedEvent`, `ActivityTaskExecutedEvent`, `ActivityTaskCompletedEvent`.
+- Resource: created, assigned, started, executed, completed, reset, and error events.
+- Request: created, ready, assignment-requested, assigned, started, completed, and cancelled events.
+- Group: created, ready, assigned, started, paused, refreshed, and completed events.
+- AutoStore: port assigned/opened/closed, movement started/completed/failed, tote closed.
+
+Definitions live in:
+
+- `tes-coreapi/src/main/kotlin/com/onomatic/tes/coreapi/task/activity/events.kt`
+- `tes-coreapi/src/main/kotlin/com/onomatic/tes/coreapi/task/resource/events.kt`
+- `tes-coreapi/src/main/kotlin/com/onomatic/tes/coreapi/task/request/events.kt`
+- `tes-coreapi/src/main/kotlin/com/onomatic/tes/coreapi/task/group/events.kt`
+- `tes-coreapi/src/main/kotlin/com/onomatic/tes/coreapi/equipment/type/asrs/events.kt`
+
+## Active-configuration limitation
+
+The dedicated CSV comments out the `preposition-tote/pick-order` relation and the `pick-from-tote` task. Therefore, source inspection proves the preposition flow and the pick-order flow independently, but does not prove a direct active event relation between them. The actual deployed workflow graph should be inspected if a strict preposition-completion trigger is required.
+
+## Traceability
+
+- Application: `tes-activity/src/main/java/com/onomatic/tes/activity/g2p/application/AsrsG2PApplicationDef.java`
+- Controller: `tes-agent/src/main/java/com/onomatic/tes/agent/application/g2p/asrs/AsrsG2PController.java`
+- Generic orchestration: `tes-engine/src/main/java/com/onomatic/tes/engine/core/workflow/activity/WorkflowActivityDef.java`

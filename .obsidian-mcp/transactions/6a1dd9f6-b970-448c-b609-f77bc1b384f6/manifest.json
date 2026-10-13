@@ -1,0 +1,29 @@
+{
+  "id": "6a1dd9f6-b970-448c-b609-f77bc1b384f6",
+  "state": "committed",
+  "createdAt": "2026-09-22T12:56:10.103Z",
+  "snapshots": [
+    {
+      "path": "Projects/TES/TES Axon Aggregates.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "applied",
+      "plannedEtag": "13995b14e6579a391b19d84b603e086ebca04a1f9c84e2f6b223fe4b7bad3e30",
+      "recoverable": true,
+      "existed": false,
+      "committedEtag": "13995b14e6579a391b19d84b603e086ebca04a1f9c84e2f6b223fe4b7bad3e30"
+    },
+    {
+      "path": "Projects/WCS/WCS Axon Aggregates.md",
+      "operation": "delete",
+      "entryType": "file",
+      "phase": "applied",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "13995b14e6579a391b19d84b603e086ebca04a1f9c84e2f6b223fe4b7bad3e30",
+      "snapshot": "1.bin"
+    }
+  ],
+  "completedAt": "2026-09-22T12:56:10.131Z"
+}

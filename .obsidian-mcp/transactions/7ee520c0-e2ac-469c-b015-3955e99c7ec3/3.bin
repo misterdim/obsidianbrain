@@ -1,0 +1,26 @@
+# WCS / TES technical wiki
+
+Repository: **Task Execution System (TES)**, documented here under the requested WCS namespace.
+
+## Navigation
+
+- [[TES Architecture]]
+- [[WCS Bounded Contexts]]
+- [[WCS Spring Boot Modules]]
+- [[WCS Axon Aggregates]]
+- [[WCS Commands Events Handlers]]
+- [[WCS Sagas Projections]]
+- [[WCS RabbitMQ Topology]]
+- [[WCS PostgreSQL Persistence]]
+- [[WCS REST APIs]]
+- [[WCS Configuration]]
+- [[WCS Deployment Architecture]]
+- [[WCS Runtime Flows]]
+- [[WCS Workflow Concepts]]
+- [[TES Agent Applications StatefulApplication]]
+
+## Scope
+
+Documentation is based on repository source. Paths are repository-relative. The application source was not modified.
+
+Key roots: `settings.gradle`, `build.gradle`, `tes-coreapi/src/main/java/com/onomatic/tes/coreapi/`, `tes-common/src/main/java/com/onomatic/tes/common/`, `tes-engine/src/main/java/com/onomatic/tes/engine/`, `tes-agent/src/main/java/com/onomatic/tes/agent/`.

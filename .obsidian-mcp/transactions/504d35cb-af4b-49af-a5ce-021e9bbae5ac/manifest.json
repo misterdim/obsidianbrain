@@ -1,0 +1,29 @@
+{
+  "id": "504d35cb-af4b-49af-a5ce-021e9bbae5ac",
+  "state": "committed",
+  "createdAt": "2026-09-22T12:56:10.193Z",
+  "snapshots": [
+    {
+      "path": "Projects/TES/TES Commands Events Handlers.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "applied",
+      "plannedEtag": "dcbf62ca3fbc7323c199aabb57ddb56334385d548fb43fa2e5603e069c88a743",
+      "recoverable": true,
+      "existed": false,
+      "committedEtag": "dcbf62ca3fbc7323c199aabb57ddb56334385d548fb43fa2e5603e069c88a743"
+    },
+    {
+      "path": "Projects/WCS/WCS Commands Events Handlers.md",
+      "operation": "delete",
+      "entryType": "file",
+      "phase": "applied",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "dcbf62ca3fbc7323c199aabb57ddb56334385d548fb43fa2e5603e069c88a743",
+      "snapshot": "1.bin"
+    }
+  ],
+  "completedAt": "2026-09-22T12:56:10.216Z"
+}

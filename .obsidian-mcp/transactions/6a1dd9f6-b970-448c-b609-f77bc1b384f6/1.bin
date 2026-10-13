@@ -1,0 +1,30 @@
+# WCS Axon Aggregates
+
+Axon aggregates are command-side consistency boundaries using `@Aggregate`, `@AggregateIdentifier`, `@CommandHandler`, and event application methods.
+
+Representative families:
+
+- Execution: `WorkAggregate`, `ResourceWorkAggregate`, `ActivityWorkAggregate`, `TaskRequestAggregate`, `TaskGroupAggregate`, `ActivityTaskAggregate`, `ResourceTaskAggregate`, `ApmRunAggregate`.
+- Configuration: `WorkflowAggregate`, `ApplicationAggregate`, `ApplicationSessionAggregate`, `AgentAggregate`, `EquipmentAggregate`, `LocationAggregate`, `WorkerAggregate`, `ZoneAggregate`, `SiteAggregate`.
+- Inventory: `ContainerAggregate`, `PositionContentAggregate`, `AbstractAssetAggregate`, `EquipmentAssetAggregate`, `StorageAssetAggregate`.
+- Integration: importer order/job/work aggregates and broker message services.
+
+```mermaid
+sequenceDiagram
+  participant C as REST/importer/agent
+  participant G as Command gateway
+  participant A as Aggregate
+  participant E as Axon event store
+  participant P as Projector
+  C->>G: command
+  G->>A: route by aggregate id
+  A-->>E: persist domain event
+  E-->>P: event processor delivery
+  P->>P: update read model
+```
+
+Notable implementation details: work/container/equipment caches; `@AggregateMember` nested members in work-order/location aggregates; snapshot trigger configuration in inventory aggregates.
+
+Related: [[WCS Commands Events Handlers]], [[TES PostgreSQL Persistence]].
+
+Source: `tes-engine/src/main/java/com/onomatic/tes/engine/`, `tes-config/src/main/java/com/onomatic/tes/config/`, `tes-inventory/src/main/java/com/onomatic/tes/inventory/`, `tes-host-importer/src/main/java/com/onomatic/tes/host/importer/`.

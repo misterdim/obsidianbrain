@@ -1,0 +1,32 @@
+---
+title: TES Deployment Architecture
+project: TES
+document_type: technical-wiki
+area: architecture
+tags: [tes, technical-wiki, architecture]
+updated: 2026-09-22
+---
+
+# TES Deployment Architecture
+
+The documented demo topology is RabbitMQ + PostgreSQL + `tes-app` + `tes-agent`.
+
+```mermaid
+flowchart TB
+  rabbit[RabbitMQ\n5672 / 15672 / 15675]
+  pg[PostgreSQL\n5432]
+  app[tes-app\n8080]
+  agent[tes-agent\n8282 / 8181]
+  app --> pg
+  app --> rabbit
+  agent --> app
+  agent --> rabbit
+```
+
+`tes-app` is the assembled Spring Boot/WAR runtime. `tes-agent` is a separate runtime. The root build configures Paketo buildpacks and image metadata for published container projects.
+
+README startup: start RabbitMQ from `resources`, then run `gradlew tes-app:bootRun` with `local,h2,cors). Demo compose uses PostgreSQL and profiles `local,postgresql,cors,fassto-dev,dev`, plus broker host/MQTT URL environment values.
+
+Operational switches: PostgreSQL/H2 profiles, profile-controlled Consul discovery, optional Axon distributed mode, profile-specific security issuer, environment-specific broker URLs.
+
+Source: `README.md`; `build.gradle`; `resources/docker-compose.yml`; `resources/docker-compose-local.yml`; `resources/onomatic-demo-compose.yaml`; `Dockerfile`; `tes-agent/Dockerfile.linux`.

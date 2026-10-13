@@ -1,0 +1,673 @@
+---
+title: ASRS Workstation Page
+application: ASRS
+area: ui
+source: tes-agent/src/ui/src/pages/asrs/AsrsWorkstationPage.vue
+---
+
+# ASRS Workstation Page
+
+This page renders the ASRS picking and putaway workstation UI. Its functional data path is:
+
+~~~text
+ApplicationSessionStore
+  -> RuntimeStore.fetch() and RuntimeStore.subscribe()
+  -> deviceState.displayState
+  -> displayState.displayData.widgets
+  -> AsrsWorkstationStore
+  -> page and child viewers
+~~~
+
+## Session and lifecycle requirements
+
+The page requires:
+
+- an authenticated application session;
+- a valid IApplicationProps.lookupId;
+- deviceId when the application must be initialized directly;
+- a successful GET state request;
+- an active websocket/STOMP subscription;
+- backend support for g2p/asrs/refresh-state.
+
+On mount it restores or initializes the session, subscribes to runtime updates, fetches state, and invokes g2p/asrs/refresh-state. A failed initial fetch redirects to login.
+
+## Runtime state required
+
+The page reads:
+
+~~~text
+deviceState.displayState.displayData.widgets
+deviceState.displayState.instruction
+deviceState.displayState.message
+~~~
+
+The display data must contain a widgets array. The ASRS store selects widgets by name and directly parses JSON widget data, so malformed data can break the UI.
+
+## RAW_DATA widgets
+
+### workstation
+
+Used for mode and toolbar state.
+
+Required or consumed fields:
+
+~~~ts
+{
+  activity: 'pick/order' | 'pick/adhoc' | 'putaway/container' | 'putaway/adhoc',
+  hasPausedTasks?: boolean,
+  taskAssignmentMode?: string,
+  canPauseTasks?: boolean
+}
+~~~
+
+Effects:
+
+- activity selects picking, hot-picking, putaway, or hot-putaway.
+- hasPausedTasks controls Resume.
+- taskAssignmentMode !== 'NONE' enables assignment behavior.
+- canPauseTasks enables Suspend.
+
+### ports
+
+Consumed by AsrsWorkstationStore.ports and rendered by PortsViewer.
+
+JSON array element shape:
+
+~~~ts
+{
+  name: string,
+  state?: string,
+  taskGroup?: string,
+  taskCount?: number
+}
+~~~
+
+The viewer displays each port, shows MOVING state, taskGroup, and remaining taskCount.
+
+### tote
+
+Consumed by AsrsWorkstationStore.tote and ToteViewer.
+
+~~~ts
+{
+  name: string,
+  bins: Array<{
+    referenceNo: string,
+    x?: number,
+    y?: number,
+    width?: number,
+    height?: number
+  }>,
+  selectedBin: {
+    name: string,
+    quantity: {
+      quantity?: number | string,
+      unit?: string
+    }
+  }
+}
+~~~
+
+selectedBin.name identifies the highlighted bin. selectedBin.quantity.quantity is displayed as an EA quantity. ToteViewer is visible only while status is waiting.
+
+### carrier
+
+Parsed by the store carrier and shelf getters. It is not actively rendered by the current tote template.
+
+~~~ts
+{
+  layout?: { properties?: string },
+  shelves: Array<{
+    referenceNo: string,
+    layout?: { properties?: string },
+    bins: Array<{
+      referenceNo: string,
+      name: string,
+      x: number,
+      y: number,
+      layout?: { properties?: string }
+    }>
+  }>,
+  selectedBin?: {
+    shelf: string,
+    name: string,
+    quantity?: unknown
+  }
+}
+~~~
+
+Layout properties are expected to be JSON-encoded strings. Bin sizing depends on the first four characters of each bin name.
+
+### position
+
+Read from widget.elements rather than widget.data.
+
+~~~ts
+{
+  name: string,
+  label: string,
+  type: 'STRING',
+  action: 'NONE',
+  value: string
+}
+~~~
+
+Logical fields expected by the UI are position, carousel, carrier, shelf, bin, and binDepth.
+
+No position widget means status is standing. A position widget plus an instruction normally means status is waiting. The detailed position fields are currently commented out in AsrsProcessSection.
+
+### staging
+
+Consumed by PutwallViewer, PutwallCard, assignment dialogs, and ShortPickDialog.
+
+JSON array element shape:
+
+~~~ts
+{
+  name: string,
+  taskCount?: number,
+  orderNo?: string,
+  container?: string,
+  instructions?: string,
+  quantity?: string,
+  unit?: string,
+  taskId?: string
+}
+~~~
+
+Assignment dialogs choose stations whose taskCount is absent or zero and which are not already assigned.
+
+### task
+
+Consumed by quantity, item, the page summary, AsrsProcessSection, and ShortPickDialog.
+
+Required elements include:
+
+~~~ts
+[
+  {
+    name: 'quantity',
+    value: { quantity: number | string, unit?: string }
+  },
+  {
+    name: 'itemNo',
+    value: string
+  }
+]
+~~~
+
+The store currently hardcodes the displayed unit to EA. The item getter requires both task and item widgets.
+
+### item
+
+Consumed together with task.
+
+~~~ts
+[
+  { name: 'imageURL', value?: string },
+  { name: string, value: string }
+]
+~~~
+
+The store uses imageURL for the product image and maps all other elements into DisplayFieldSet fields. The item name comes from task.itemNo. If either item or task is missing, item details and confirmation controls are not shown.
+
+## Instruction and status requirements
+
+The page displays displayState.instruction.message. Special message types are:
+
+- g2p/message/waiting-completion -> holding
+- g2p/message/waiting-carousel -> moving
+
+No instruction -> refreshing.
+
+Status flow:
+
+~~~text
+no displayData                 -> initializing
+sending === true               -> sending
+no instruction                 -> refreshing
+waiting-completion             -> holding
+waiting-carousel               -> moving
+no position widget             -> standing
+otherwise                      -> waiting
+~~~
+
+The page uses these states for skeletons, task details, action buttons, assignment buttons, and tote visibility.
+
+## Backend actions
+
+POST /action actions used by the page:
+
+- g2p/asrs/refresh-state
+- g2p/pause
+- g2p/resume
+- g2p/select-activity with pick/order
+- g2p/select-activity with putaway/container
+
+Child process actions include:
+
+- g2p/confirm-task
+- g2p/skip-task
+- short-pick flow
+
+Assignment dialogs use:
+
+- GET /orders
+- GET /containers
+- g2p/assign-orders
+- g2p/assign-containers
+
+The ASRS controller exposes orders and containers under:
+
+~~~text
+/api/applications/g2p/asrs/orders
+/api/applications/g2p/asrs/containers
+~~~
+
+The base path is configurable through tes.local-agent.application.application-path.
+
+## Child component tree
+
+~~~text
+AsrsWorkstationPage.vue
+├── HandheldInstruction
+├── PortsViewer -> EquipmentViewerSquare
+├── ToteViewer -> EquipmentViewerSquare
+├── AsrsProcessSection -> DisplayFieldSet, ItemQuantityTag,
+│   MessageDisplayMobile, ShortPickDialog
+├── PutwallViewer -> PutwallCard
+├── ItemQuantityTag
+├── AssignOrdersDialog
+└── AssignContainersDialog
+~~~
+
+All ASRS child components use AsrsWorkstationStore, which reads RuntimeStore.
+
+## Operational checklist
+
+For a fully populated workstation view, verify:
+
+- authenticated session and lookupId;
+- successful state fetch and websocket updates;
+- displayData.widgets array;
+- workstation widget;
+- ports, tote, and staging widgets;
+- position widget plus instruction for an active task;
+- task and item widgets;
+- valid JSON in every JSON-backed widget;
+- backend support for the actions above.
+
+## Source files
+
+- tes-agent/src/ui/src/pages/asrs/AsrsWorkstationPage.vue
+- tes-agent/src/ui/src/stores/model/widgets/AsrsWorkstationStore.ts
+- tes-agent/src/ui/src/stores/RuntimeStore.ts
+- tes-agent/src/ui/src/stores/model/Workstation.ts
+- tes-agent/src/ui/src/components/widgets/equipmentViewer/asrs/PortsViewer.vue
+- tes-agent/src/ui/src/components/widgets/equipmentViewer/asrs/ToteViewer.vue
+- tes-agent/src/ui/src/components/widgets/equipmentViewer/putwall/PutwallViewer.vue
+- tes-agent/src/ui/src/pages/asrs/AsrsProcessSection.vue
+- tes-agent/src/ui/src/pages/asrs/AssignOrdersDialog.vue
+- tes-agent/src/ui/src/pages/asrs/AssignContainersDialog.vue
+- tes-agent/src/ui/src/pages/asrs/ShortPickDialog.vue
+- tes-agent/src/main/java/com/onomatic/tes/agent/application/g2p/asrs/AsrsG2PRestController.java
+
+
+## Frontend-to-backend type mapping
+
+The backend producer is:
+
+- tes-activity/src/main/java/com/onomatic/tes/activity/g2p/application/AsrsG2PApplicationDef.java
+- tes-activity/src/main/java/com/onomatic/tes/activity/g2p/application/asrs.kt
+- tes-activity/src/main/java/com/onomatic/tes/activity/g2p/application/data.kt
+
+The display envelope is created as DisplayWidgets. Each JSON-backed entry is created through ApplicationDef.getData(name, data), which serializes the payload as a DisplayRawData widget. The frontend then locates the widget by name and parses widget.data.
+
+~~~text
+AsrsG2PApplicationDef.displayState()
+  -> DisplayWidgets
+  -> DisplayRawData(name, JSON(data))
+  -> RuntimeStore.deviceState.displayState.displayData.widgets
+  -> AsrsWorkstationStore getter
+  -> Vue component
+~~~
+
+### RAW_DATA mapping
+
+#### ports
+
+Frontend:
+
+- widget name: ports
+- getter: AsrsWorkstationStore.ports
+- consumer: PortsViewer
+- frontend item type: port object with name, state, taskGroup, taskCount
+
+Backend:
+
+~~~text
+PortData
+  package: com.onomatic.tes.activity.g2p.application
+  source: tes-activity/src/main/java/com/onomatic/tes/activity/g2p/application/asrs.kt
+~~~
+
+~~~ts
+PortData {
+  name: string,
+  tote: string,
+  selected: boolean,
+  taskGroup: string,
+  state: CarouselState,
+  taskCount: Long
+}
+~~~
+
+Backend construction:
+
+~~~text
+AsrsG2PApplicationDef.getPorts(session)
+  -> session.getPorts()
+  -> new PortData(...)
+  -> getData("ports", getPorts(session))
+~~~
+
+Important differences:
+
+- Backend also sends tote and selected, but the current PortsViewer does not use them.
+- Backend taskCount is Long; JSON is consumed as a JavaScript number.
+- Backend state is CarouselState; the frontend compares/display-uses its serialized value, including MOVING.
+- The current backend code explicitly sets selected to false.
+
+#### tote
+
+Frontend:
+
+- widget name: tote
+- getter: AsrsWorkstationStore.tote
+- consumers: ToteViewer and the store shelf getter
+- frontend type: IToteState
+
+Backend:
+
+~~~text
+ToteData
+ToteBinData
+SelectedToteBinData
+  package: com.onomatic.tes.activity.g2p.application
+  source: tes-activity/src/main/java/com/onomatic/tes/activity/g2p/application/asrs.kt
+~~~
+
+~~~ts
+ToteData {
+  referenceNo: string,
+  name: string,
+  layout: Layout | null,
+  bins: ToteBinData[],
+  selectedBin: SelectedToteBinData | null
+}
+
+ToteBinData {
+  referenceNo: string,
+  name: string,
+  layout: Layout | null
+}
+
+SelectedToteBinData {
+  name: string,
+  quantity: ItemQuantity
+}
+~~~
+
+Backend construction:
+
+~~~text
+AsrsG2PApplicationDef.getTote(session)
+  -> session.getTote()
+  -> LocationRepository lookup
+  -> PositionRepository.findAllByLocation(...)
+  -> ToteBinData(...)
+  -> SelectedToteBinData(task position, task quantity)
+  -> ToteData(...)
+  -> getData("tote", getTote(session))
+~~~
+
+Important differences:
+
+- The backend ToteData has referenceNo and layout; the frontend IToteState currently declares only name, bins, and selectedBin.
+- Backend bin layout is a Layout object; the frontend ToteViewer currently does not use it.
+- selectedBin is nullable on the backend, but ToteViewer accesses store.tote.selectedBin.name when a tote is rendered. An active task therefore needs a selected bin.
+- ItemQuantity supplies the selected-bin quantity and unit. The current frontend displays the quantity with a hardcoded EA suffix.
+
+#### workstation
+
+Frontend:
+
+- widget name: workstation
+- getters: mode, paused, assignable, suspendable, canPauseTasks
+- consumers: page toolbar and assignment controls
+- frontend type: inferred object parsed by AsrsWorkstationStore
+
+Backend:
+
+~~~text
+WorkstationData
+  package: com.onomatic.tes.activity.g2p.application
+  source: tes-activity/src/main/java/com/onomatic/tes/activity/g2p/application/data.kt
+~~~
+
+~~~ts
+WorkstationData {
+  activity: G2PActivityType,
+  taskAssignmentMode: TaskAssignmentMode,
+  hasPausedTasks: boolean,
+  canPauseTasks: boolean
+}
+~~~
+
+Backend construction:
+
+~~~text
+AsrsG2PApplicationDef.getWorkstation(session)
+  -> new WorkstationData(
+       session.getCurrentActivity(),
+       session.getTaskAssignmentMode(),
+       false,
+       false
+     )
+  -> getData("workstation", getWorkstation(session))
+~~~
+
+Important differences:
+
+- Frontend mode expects serialized activity values such as pick/order and putaway/container.
+- Frontend checks taskAssignmentMode against the string NONE; backend type is TaskAssignmentMode.
+- The current producer passes false for hasPausedTasks and canPauseTasks in this deprecated displayState path, so the corresponding toolbar controls may remain disabled unless a newer producer populates them.
+
+#### staging
+
+Frontend:
+
+- widget name: staging
+- getter: AsrsWorkstationStore.stations
+- consumers: PutwallViewer, PutwallCard, assignment dialogs, ShortPickDialog
+- frontend type: IStationState[]
+
+Backend:
+
+~~~text
+StagingStationData
+  package: com.onomatic.tes.activity.g2p.application
+  source: tes-activity/src/main/java/com/onomatic/tes/activity/g2p/application/data.kt
+~~~
+
+~~~ts
+StagingStationData {
+  id: UUID,
+  name: string,
+  taskCount: Long,
+  taskId: ActivityTaskItemId | null,
+  orderNo: string,
+  container: string,
+  instructions: string,
+  quantity: BigDecimal,
+  unit: string
+}
+~~~
+
+Backend construction:
+
+~~~text
+AsrsG2PApplicationDef.getStagingStations(session)
+  -> session.getStagingAreas()
+  -> activity-specific pick/putaway task lookup
+  -> new StagingStationData(...)
+  -> getData("staging", getStagingStations(session))
+~~~
+
+Frontend mapping:
+
+~~~ts
+IStationState {
+  name: string,
+  taskCount?: number,
+  orderNo?: string,
+  container?: string,
+  instructions?: string,
+  quantity?: string,
+  unit?: string,
+  taskId?: any
+}
+~~~
+
+Important differences:
+
+- Backend id is present but the frontend IStationState does not declare it.
+- Backend taskId is ActivityTaskItemId; the frontend treats it as any and later sends it as the task identifier for short-pick.
+- Backend quantity is BigDecimal; JSON becomes a numeric value or serialized numeric value depending on the mapper.
+- Backend instructions currently return the literal string "null" from extractInstructions().
+- For putaway, the backend intentionally fills both orderNo and container with the task reference number because the UI primarily reads orderNo.
+
+### DisplayFields mapping
+
+The following entries are not produced by asrs.kt. They are DisplayFields widgets created by AsrsG2PApplicationDef.getCurrentTaskFields(...).
+
+Backend producer:
+
+~~~text
+AsrsG2PApplicationDef.getCurrentTaskFields(HandleItemPositionDef)
+  -> DisplayFields("item")
+  -> DisplayFields("task")
+  -> DisplayFields("position")
+~~~
+
+#### item
+
+Backend widget: DisplayFields named item.
+
+Created fields:
+
+~~~text
+itemName       -> STRING -> item master name
+vendorNo       -> STRING -> item master vendor property
+manufacturerNo -> STRING -> item master manufacturer property
+imageURL       -> IMAGE  -> item master image URL property
+~~~
+
+Frontend behavior:
+
+- Uses every item element except imageURL as DisplayFieldSet fields.
+- Uses imageURL for the product image.
+- Does not currently distinguish backend DisplayDataType values in the field renderer.
+
+#### task
+
+Backend widget: DisplayFields named task.
+
+Created fields:
+
+~~~text
+itemNo   -> STRING   -> current task item number
+quantity -> QUANTITY -> current task ItemQuantity
+~~~
+
+Frontend behavior:
+
+- Reads task.itemNo as the displayed item name.
+- Reads task.quantity.quantity for the summary quantity.
+- Hardcodes the displayed unit to EA.
+
+#### position
+
+Backend widget: DisplayFields named position.
+
+Created fields:
+
+~~~text
+position  -> STRING -> position reference number
+carousel  -> STRING -> parent carousel name
+carrier   -> STRING -> carrier/location parent name
+shelf     -> STRING -> shelf/location name
+bin       -> STRING -> first two characters of position name
+binDepth  -> STRING -> last two characters of position name
+~~~
+
+Frontend behavior:
+
+- Converts widget.elements into an object through AsrsWorkstationStore.position.
+- Uses the presence of this widget to distinguish standing from waiting.
+- The detailed position display in AsrsProcessSection is currently commented out.
+
+### Backend display infrastructure
+
+The common backend types are:
+
+~~~text
+DisplayWidgets
+DisplayRawData
+DisplayFields
+DisplayField
+DisplayDataType
+~~~
+
+Relevant source areas:
+
+- tes-coreapi/src/main/java/com/onomatic/tes/coreapi/device/application/model.kt
+- tes-engine/src/main/java/com/onomatic/tes/engine/core/model/application/ApplicationDef.java
+
+DisplayRawData contains:
+
+~~~ts
+{
+  name: string,
+  data: string | null
+}
+~~~
+
+The data field is the JSON serialization of PortData, ToteData, WorkstationData, StagingStationData, or another backend payload.
+
+### Additional backend types
+
+The payloads above reference these domain types:
+
+- CarouselState for port state.
+- G2PActivityType for workstation activity.
+- TaskAssignmentMode for workstation assignment mode.
+- Layout for tote/carrier layout metadata.
+- ItemQuantity for selected-bin and task quantities.
+- ItemQuantityInfo for carrier selected-bin quantities.
+- ActivityTaskItemId for staging task identifiers.
+- BigDecimal for staging quantities.
+- UUID for staging station identifiers.
+
+### Current producer caveat
+
+The observed producer methods in AsrsG2PApplicationDef are marked Deprecated:
+
+- displayState
+- getWorkstation
+- getTote
+- getPorts
+- getStagingStations
+- getCurrentTaskFields
+
+This mapping documents the payload contract used by the current ASRS UI and the legacy/deprecated producer path. If a newer state producer replaces these methods, verify widget names and serialized field shapes again.

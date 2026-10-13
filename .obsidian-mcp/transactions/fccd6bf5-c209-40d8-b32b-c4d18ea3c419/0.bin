@@ -1,0 +1,3 @@
+# Updates
+
+- 2026-10-13T15:41:22-04:00 — `Integration Notes.md`: recorded that IntelliJ MCP project identity is the root module `tes`, obtained via `get_project_modules`, so project memory belongs in `Projects/tes/` rather than the Codex workspace-name folder.

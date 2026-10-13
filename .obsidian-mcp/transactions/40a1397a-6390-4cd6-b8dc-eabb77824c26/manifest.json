@@ -1,0 +1,29 @@
+{
+  "id": "40a1397a-6390-4cd6-b8dc-eabb77824c26",
+  "state": "rolled_back",
+  "createdAt": "2026-09-22T15:12:27.374Z",
+  "snapshots": [
+    {
+      "path": "Projects/TES/Applications/Yourbar Forklift Application.md",
+      "operation": "write",
+      "entryType": "file",
+      "phase": "pending",
+      "plannedEtag": "e83644b74896fc1bf8e0a4391d50176db52b6ea5752cfa711d5b120fd7279e18",
+      "recoverable": true,
+      "existed": false,
+      "committedEtag": "e83644b74896fc1bf8e0a4391d50176db52b6ea5752cfa711d5b120fd7279e18"
+    },
+    {
+      "path": "Projects/TES/Applications/Yourbar Forklift.md",
+      "operation": "delete",
+      "entryType": "file",
+      "phase": "applying",
+      "recoverable": true,
+      "existed": true,
+      "mode": 33206,
+      "etag": "e83644b74896fc1bf8e0a4391d50176db52b6ea5752cfa711d5b120fd7279e18",
+      "snapshot": "1.bin"
+    }
+  ],
+  "completedAt": "2026-09-22T15:12:27.572Z"
+}
